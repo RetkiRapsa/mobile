@@ -1,11 +1,11 @@
-import Spot from '@/types/Spot';
+import Location from '@/types/Location';
 
 import supabase from './supabaseClient';
 
-export async function hasNewSpotsInPastHour(): Promise<boolean> {
+export async function hasNewLocationsInPastHour(): Promise<boolean> {
   const oneHourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
-    .from('spots')
+    .from('locations')
     .select('id')
     .gte('created_at', oneHourAgoIso)
     .limit(1);
@@ -17,13 +17,13 @@ export async function hasNewSpotsInPastHour(): Promise<boolean> {
   return (data?.length ?? 0) > 0;
 }
 
-export default async function getNearbySpotsFromCoords(
+export default async function getNearbyLocationsFromCoords(
   latitude: number,
   longitude: number,
   radiusInMeters: number = 100 * 1000,
   limit: number = 1000
 ) {
-  const { data, error } = await supabase.rpc('get_nearby_spots', {
+  const { data, error } = await supabase.rpc('get_nearby_locations', {
     lat: latitude,
     lon: longitude,
     max_distance_meters: radiusInMeters,
@@ -37,7 +37,12 @@ export default async function getNearbySpotsFromCoords(
   return data;
 }
 
-export const hasNearbySpots = (spots: Spot[], lat: number, lng: number, distance: number = 10) => {
+export const hasNearbyLocations = (
+  locations: Location[],
+  lat: number,
+  lng: number,
+  distance: number = 10
+) => {
   const R = 6371e3;
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -48,19 +53,19 @@ export const hasNearbySpots = (spots: Spot[], lat: number, lng: number, distance
       Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
-  return spots.some(
-    (spot) =>
-      spot.latitude !== undefined &&
-      spot.longitude !== undefined &&
-      getDistance(lat, lng, spot.latitude, spot.longitude) <= distance
+  return locations.some(
+    (location) =>
+      location.latitude !== undefined &&
+      location.longitude !== undefined &&
+      getDistance(lat, lng, location.latitude, location.longitude) <= distance
   );
 };
 
-export const isTooFarFromSpot = (
-  spot: Spot,
+export const isTooFarFromLocation = (
+  location: Location,
   lat: number,
   lng: number,
-  maxDistanceFromSpot: number = 100
+  maxDistanceFromLocation: number = 100
 ): boolean => {
   const R = 6371e3;
   const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -72,6 +77,6 @@ export const isTooFarFromSpot = (
       Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
-  if (spot.latitude === undefined || spot.longitude === undefined) return true;
-  return getDistance(lat, lng, spot.latitude, spot.longitude) > maxDistanceFromSpot;
+  if (location.latitude === undefined || location.longitude === undefined) return true;
+  return getDistance(lat, lng, location.latitude, location.longitude) > maxDistanceFromLocation;
 };

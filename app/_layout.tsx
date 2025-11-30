@@ -8,7 +8,7 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
-import Spot from '@/types/Spot';
+import Location from '@/types/Location';
 import getOrCreateUUID from '@/utils/identity';
 import { splashInfoSeen } from '@/utils/splashInfo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -34,12 +34,12 @@ type IdentityContextType = {
   setIdentity: React.Dispatch<React.SetStateAction<string | undefined>>;
 };
 
-type VisibleSpotsContextType = {
-  visibleSpots: Spot[];
-  setVisibleSpots: React.Dispatch<React.SetStateAction<Spot[]>>;
+type VisibleLocationsContextType = {
+  visibleLocations: Location[];
+  setVisibleLocations: React.Dispatch<React.SetStateAction<Location[]>>;
 };
 
-type AppContextType = SplashInfoContextType & IdentityContextType & VisibleSpotsContextType;
+type AppContextType = SplashInfoContextType & IdentityContextType & VisibleLocationsContextType;
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -54,7 +54,7 @@ export function useAppContext() {
 function AppProvider({ children }: { children: React.ReactNode }) {
   const [hasReadSplashInfo, setHasReadSplashInfo] = useState<boolean>(false);
   const [identity, setIdentity] = useState<string | undefined>(undefined);
-  const [visibleSpots, setVisibleSpots] = useState<Spot[]>([]);
+  const [visibleLocations, setVisibleLocations] = useState<Location[]>([]);
 
   useEffect(() => {
     const checkSplashInfo = async () => {
@@ -83,8 +83,8 @@ function AppProvider({ children }: { children: React.ReactNode }) {
         setHasReadSplashInfo,
         identity,
         setIdentity,
-        visibleSpots,
-        setVisibleSpots,
+        visibleLocations,
+        setVisibleLocations,
       }}
     >
       {children}
@@ -109,7 +109,7 @@ function RootLayoutNav({ children }: { children?: React.ReactNode }) {
             }}
           />
           <Stack.Screen
-            name="spotDetails"
+            name="locationDetails"
             options={{
               presentation: 'card',
               headerTitle: 'Kohteen tiedot',

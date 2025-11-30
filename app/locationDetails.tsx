@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -12,19 +12,18 @@ import {
 import * as Clipboard from 'expo-clipboard';
 
 import { useAppContext } from '@/app/_layout';
-import CreateNewSpotUpdate from '@/components/CreateNewSpotUpdate';
+import CreateNewLocationUpdate from '@/components/CreateNewLocationUpdate';
 import colors from '@/constants/Colors';
-import Spot from '@/types/Spot';
-import SpotUpdate from '@/types/SpotUpdate';
-import { isTooFarFromSpot } from '@/utils/getNearbySpotsFromCoords';
-import getSpotUpdates from '@/utils/getSpotUpdates';
+import Location from '@/types/Location';
+import LocationUpdate from '@/types/LocationUpdate';
+import getLocationUpdates from '@/utils/getLocationUpdates';
+import { isTooFarFromLocation } from '@/utils/getNearbyLocationsFromCoords';
 import { getLocation } from '@/utils/location';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRoute } from '@react-navigation/native';
-import { useFocusEffect } from '@react-navigation/native';
 
-enum SpotTypeEnum {
+enum LocationTypeEnum {
   CAMPING_AREA = 'CAMPING_AREA',
   FIREPLACE = 'FIREPLACE',
   LAAVU = 'LAAVU',
@@ -47,21 +46,21 @@ export function getIconName(
   | 'parking'
   | 'map-marker-question' {
   switch (type) {
-    case SpotTypeEnum.CAMPING_AREA:
+    case LocationTypeEnum.CAMPING_AREA:
       return 'tent';
-    case SpotTypeEnum.FIREPLACE:
+    case LocationTypeEnum.FIREPLACE:
       return 'campfire';
-    case SpotTypeEnum.BEACH:
+    case LocationTypeEnum.BEACH:
       return 'waves';
-    case SpotTypeEnum.BRIDGE:
+    case LocationTypeEnum.BRIDGE:
       return 'bridge';
-    case SpotTypeEnum.LAAVU:
+    case LocationTypeEnum.LAAVU:
       return 'chevron-up-box-outline';
-    case SpotTypeEnum.TOILET:
+    case LocationTypeEnum.TOILET:
       return 'toilet';
-    case SpotTypeEnum.PARKING:
+    case LocationTypeEnum.PARKING:
       return 'parking';
-    case SpotTypeEnum.OTHER:
+    case LocationTypeEnum.OTHER:
     default:
       return 'map-marker-question';
   }
@@ -74,21 +73,21 @@ function TabBarIcon(props: {
   return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
 }
 
-export default function SpotDetailsScreen() {
+export default function LocationDetailsScreen() {
   const backgroundColor =
     useColorScheme() === 'dark' ? colors.dark.background : colors.light.background;
   const footerBackgroundColor = useColorScheme() === 'dark' ? '#131313' : '#ffffff';
   const footerBorderColor = useColorScheme() === 'dark' ? '#131313' : '#cccccc';
   const foregroundColor = useColorScheme() === 'dark' ? colors.dark.text : colors.light.text;
   const route = useRoute();
-  const [spotUpdates, setSpotUpdates] = useState<SpotUpdate[]>([]);
-  const [addSpotUpdate, setAddSpotUpdate] = useState(false);
+  const [locationUpdates, setLocationUpdates] = useState<LocationUpdate[]>([]);
+  const [addLocationUpdate, setAddLocationUpdate] = useState(false);
   const [updatedAvailable, setUpdatedAvailable] = useState(false);
   const [updatedTicks, setUpdatedTicks] = useState(false);
   const [lastUpdateCreatedAt, setLastUpdateCreatedAt] = useState<string | undefined>(undefined);
   const [isTooFar, setIsTooFar] = useState(false);
-  const { spot } = route.params as { spot: Spot };
-  const { identity, setVisibleSpots, visibleSpots } = useAppContext();
+  const { location } = route.params as { location: Location };
+  const { identity, setVisibleLocations, visibleLocations } = useAppContext();
 
   const copyToClipboard = async (text: string) => {
     await Clipboard.setStringAsync(text);
@@ -97,7 +96,7 @@ export default function SpotDetailsScreen() {
   useEffect(() => {
     const checkDistance = async () => {
       const location = await getLocation();
-      if (await isTooFarFromSpot(spot, location!.latitude, location!.longitude)) {
+      if (await isTooFarFromLocation(location, location!.latitude, location!.longitude)) {
         setIsTooFar(true);
       } else {
         setIsTooFar(false);
@@ -105,17 +104,17 @@ export default function SpotDetailsScreen() {
     };
 
     checkDistance();
-  }, [spot]);
+  }, [location]);
 
   useEffect(() => {
     const fetchUpdates = async () => {
-      const updates = await getSpotUpdates(spot?.id);
-      setSpotUpdates(
+      const updates = await getLocationUpdates(location?.id);
+      setLocationUpdates(
         updates.map((update: any) => {
           const createdAt = new Date(update.created).toLocaleString('fi-FI');
           return {
             id: update.id,
-            spotId: update.spot_id,
+            locationId: update.location_id,
             updateText: update.update_text,
             device: update.device,
             created: createdAt,
@@ -124,22 +123,22 @@ export default function SpotDetailsScreen() {
       );
     };
     fetchUpdates();
-  }, [spot.id, lastUpdateCreatedAt]);
+  }, [location.id, lastUpdateCreatedAt]);
 
   useEffect(() => {
-    if (spot) {
-      setUpdatedAvailable(spot.available);
-      setUpdatedTicks(spot.ticks);
+    if (location) {
+      setUpdatedAvailable(location.available);
+      setUpdatedTicks(location.ticks);
     }
-  }, [spot.id]);
+  }, [location.id]);
 
-  if (addSpotUpdate) {
+  if (addLocationUpdate) {
     return (
-      <CreateNewSpotUpdate
-        spot={spot}
+      <CreateNewLocationUpdate
+        location={location}
         available={updatedAvailable}
         ticks={updatedTicks}
-        handleClose={() => setAddSpotUpdate(false)}
+        handleClose={() => setAddLocationUpdate(false)}
         handleSavedUpdate={(available: boolean, ticks: boolean) => {
           setUpdatedAvailable(available);
           setUpdatedTicks(ticks);
@@ -157,7 +156,7 @@ export default function SpotDetailsScreen() {
           <View style={styles.content}>
             <MaterialCommunityIcons
               style={{ marginBottom: 10 }}
-              name={getIconName(spot.type!)}
+              name={getIconName(location.type!)}
               size={52}
               color={foregroundColor}
             />
@@ -165,10 +164,10 @@ export default function SpotDetailsScreen() {
               style={[styles.title, { color: foregroundColor }]}
               onPress={() => {
                 Alert.alert('Kohteen koordinaatit kopioitu leikepöydälle');
-                copyToClipboard(spot.latitude + ', ' + spot.longitude);
+                copyToClipboard(location.latitude + ', ' + location.longitude);
               }}
             >
-              {spot.name}
+              {location.name}
             </Text>
             <Text style={[styles.statusText, { color: foregroundColor }]}>
               Käytössä: {updatedAvailable ? 'Kyllä' : 'Ei'}
@@ -186,17 +185,17 @@ export default function SpotDetailsScreen() {
               >
                 Viimeisimmät päivitykset:
               </Text>
-              {spotUpdates.map((spotUpdate, key) => (
+              {locationUpdates.map((locationUpdate, key) => (
                 <View style={{ marginBottom: 10 }} key={key}>
                   <Text style={[styles.updateItem, { color: foregroundColor }]}>
-                    {spotUpdate.created}
+                    {locationUpdate.created}
                   </Text>
                   <Text style={[styles.updateItem, { color: foregroundColor }]}>
-                    {spotUpdate.updateText}
+                    {locationUpdate.updateText}
                   </Text>
                 </View>
               ))}
-              {spotUpdates.length === 0 && (
+              {locationUpdates.length === 0 && (
                 <Text style={[styles.updateItem, { color: foregroundColor }]}>Ei päivityksiä</Text>
               )}
             </View>
@@ -211,7 +210,7 @@ export default function SpotDetailsScreen() {
           >
             <TouchableOpacity
               // @ts-ignore-next-line
-              onPress={() => setAddSpotUpdate(true)}
+              onPress={() => setAddLocationUpdate(true)}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TabBarIcon name="plus" color="#8E8E8F" />

@@ -7,8 +7,8 @@ import { useNavigation, useRouter } from 'expo-router';
 import { useAppContext } from '@/app/_layout';
 import ReCenterButton from '@/components/ReCenterButton';
 import RefreshButton from '@/components/RefreshButton';
-import Spot from '@/types/Spot';
-import getNearbySpotsFromCoords from '@/utils/getNearbySpotsFromCoords';
+import Location from '@/types/Location';
+import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
 import { getLocation } from '@/utils/location';
 import { getIconName } from '@/utils/map';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -27,7 +27,7 @@ export default function Map({ location }: MapProps) {
   const mapRef = useRef<MapView | null>(null);
   const navigation = useNavigation();
   const router = useRouter();
-  const { visibleSpots, setVisibleSpots, identity } = useAppContext();
+  const { visibleLocations, setVisibleLocations, identity } = useAppContext();
 
   const [locationFound, setLocationFound] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -66,42 +66,42 @@ export default function Map({ location }: MapProps) {
 
   useEffect(() => {
     if (!location) return;
-    const fetchNearbySpots = async () => {
-      const nearby = await getNearbySpotsFromCoords(
+    const fetchNearbyLocations = async () => {
+      const nearby = await getNearbyLocationsFromCoords(
         location.latitude,
         location.longitude,
         SEARCH_RADIUS,
         MAX_SPOTS
       );
-      setVisibleSpots(nearby);
+      setVisibleLocations(nearby);
     };
-    fetchNearbySpots();
-  }, [location, setVisibleSpots]);
+    fetchNearbyLocations();
+  }, [location, setVisibleLocations]);
 
   // Marker rendering
   const renderMarkers = useMemo(
     () =>
-      visibleSpots.map((spot: Spot) => (
+      visibleLocations.map((location: Location) => (
         <Marker
-          key={spot.id}
-          coordinate={{ latitude: spot.latitude, longitude: spot.longitude }}
+          key={location.id}
+          coordinate={{ latitude: location.latitude, longitude: location.longitude }}
           // @ts-ignore-next-line
-          onPress={() => navigation.navigate('spotDetails', { spot })}
+          onPress={() => navigation.navigate('locationDetails', { location })}
         >
           <MaterialCommunityIcons
             style={{
               borderWidth: 2,
-              borderColor: spot.ticks ? 'red' : 'green',
+              borderColor: location.ticks ? 'red' : 'green',
               borderRadius: 8,
               backgroundColor: 'lightblue',
             }}
-            name={getIconName(spot.type!)}
+            name={getIconName(location.type!)}
             size={30}
-            color={spot.available ? 'black' : 'red'}
+            color={location.available ? 'black' : 'red'}
           />
         </Marker>
       )),
-    [visibleSpots, navigation]
+    [visibleLocations, navigation]
   );
 
   // Refresh handler
@@ -120,19 +120,19 @@ export default function Map({ location }: MapProps) {
     (global as any).lastRefreshTime = now;
     const currentLocation = await getLocation();
     if (currentLocation) {
-      const spots = await getNearbySpotsFromCoords(
+      const locations = await getNearbyLocationsFromCoords(
         currentLocation.latitude,
         currentLocation.longitude,
         SEARCH_RADIUS,
         MAX_SPOTS
       );
-      Alert.alert('Päivitetty', `Löydettiin ${spots.length} kohdetta.`);
-      setVisibleSpots(spots);
+      Alert.alert('Päivitetty', `Löydettiin ${locations.length} kohdetta.`);
+      setVisibleLocations(locations);
     } else {
       Alert.alert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
     }
     setRefreshing(false);
-  }, [refreshing, setVisibleSpots]);
+  }, [refreshing, setVisibleLocations]);
 
   // Re-center handler
   const handleRecenter = useCallback(async () => {
@@ -159,7 +159,7 @@ export default function Map({ location }: MapProps) {
     <>
       <MapView
         ref={mapRef}
-        key={visibleSpots.length}
+        key={visibleLocations.length}
         style={styles.map}
         zoomEnabled
         scrollEnabled

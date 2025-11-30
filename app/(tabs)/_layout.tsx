@@ -61,7 +61,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="createNewSpot"
+        name="createNewLocation"
         options={{
           title: 'Uusi',
           headerTitle: 'Luo uusi kohde',

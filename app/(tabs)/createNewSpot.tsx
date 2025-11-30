@@ -1,12 +1,12 @@
 import { StyleSheet } from 'react-native';
 
-import CreateNewSpot from '@/components/CreateNewSpot';
+import CreateNewLocation from '@/components/CreateNewLocation';
 import { View } from '@/components/Themed';
 
 export default function CreateScreen() {
   return (
     <View style={styles.container}>
-      <CreateNewSpot />
+      <CreateNewLocation />
     </View>
   );
 }

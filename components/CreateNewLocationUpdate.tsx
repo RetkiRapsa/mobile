@@ -1,26 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  Animated,
-  StyleSheet,
-  Switch,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-} from 'react-native';
+import { Alert, Animated, StyleSheet, Switch, TextInput, TouchableOpacity, useColorScheme } from 'react-native';
+
+
 
 import { useAppContext } from '@/app/_layout';
 import { Text, View } from '@/components/Themed';
 import colors from '@/constants/Colors';
-import Spot from '@/types/Spot';
-import SpotUpdate from '@/types/SpotUpdate';
+import Location from '@/types/Location';
+import LocationUpdate from '@/types/LocationUpdate';
 import createNewUpdate from '@/utils/createNewUpdate';
-import getNearbySpotsFromCoords from '@/utils/getNearbySpotsFromCoords';
+import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
 
 import ScrollView = Animated.ScrollView;
 
 interface FormState {
-  spotId: string;
+  locationId: string;
   updateText: string;
   ticks: boolean;
   available: boolean;
@@ -35,34 +29,34 @@ const getTheme = (colorScheme: string | null | undefined) => ({
   button: colorScheme === 'dark' ? styles.buttonDarkMode : styles.buttonLightMode,
 });
 
-type CreateNewSpotUpdateProps = {
-  spot: Spot;
+type CreateNewLocationUpdateProps = {
+  location: Location;
   available: boolean;
   ticks: boolean;
   handleClose: () => void;
   handleSavedUpdate: (available: boolean, ticks: boolean) => void;
 };
 
-export default function CreateNewSpotUpdate({
-  spot,
+export default function CreateNewLocationUpdate({
+  location,
   available,
   ticks,
   handleClose,
   handleSavedUpdate,
-}: CreateNewSpotUpdateProps) {
-  const { identity, setVisibleSpots, visibleSpots } = useAppContext();
+}: CreateNewLocationUpdateProps) {
+  const { identity, setVisibleLocations, visibleLocations } = useAppContext();
   const colorScheme = useColorScheme();
   const theme = useMemo(() => getTheme(colorScheme), [colorScheme]);
 
   const defaultForm: FormState = useMemo(
     () => ({
-      spotId: spot.id ?? '',
+      locationId: location.id ?? '',
       updateText: '',
       ticks: ticks,
       available: available,
       device: identity ?? '',
     }),
-    [spot, identity]
+    [location, identity]
   );
 
   const [form, setForm] = useState<FormState>(defaultForm);
@@ -72,10 +66,10 @@ export default function CreateNewSpotUpdate({
   useEffect(() => {
     setForm((prev) => ({
       ...prev,
-      spotId: spot?.id ?? '',
+      locationId: location?.id ?? '',
       device: identity ?? '',
     }));
-  }, [identity, spot]);
+  }, [identity, location]);
 
   const handleSave = useCallback(async () => {
     if (!form.updateText) {
@@ -84,7 +78,7 @@ export default function CreateNewSpotUpdate({
     }
     setLoading(true);
     try {
-      const newUpdate: SpotUpdate = await createNewUpdate({
+      const newUpdate: LocationUpdate = await createNewUpdate({
         ...form,
         device: identity || 'unknown',
       });
@@ -95,13 +89,13 @@ export default function CreateNewSpotUpdate({
         const SEARCH_RADIUS = 1000 * 1000;
         const MAX_SPOTS = 50;
 
-        await getNearbySpotsFromCoords(
-          spot.latitude,
-          spot.longitude,
+        await getNearbyLocationsFromCoords(
+          location.latitude,
+          location.longitude,
           SEARCH_RADIUS,
           MAX_SPOTS
         ).then((nearby) => {
-          setVisibleSpots(nearby);
+          setVisibleLocations(nearby);
           setForm(defaultForm);
           Alert.alert('Päivityksesi on nyt lisätty kohteeseen.');
           handleSavedUpdate(form.available, form.ticks);
@@ -114,7 +108,7 @@ export default function CreateNewSpotUpdate({
     setLoading(false);
   }, [form, identity, defaultForm]);
 
-  if (!spot) {
+  if (!location) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>Ladataan...</Text>
@@ -124,7 +118,7 @@ export default function CreateNewSpotUpdate({
 
   return (
     <ScrollView contentContainerStyle={[styles.content, { backgroundColor: theme.background }]}>
-      <Text style={styles.header}>{spot.name}</Text>
+      <Text style={styles.header}>{location.name}</Text>
       <Text style={styles.label}>Havaintosi kohteessa:</Text>
       <TextInput
         multiline

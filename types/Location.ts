@@ -1,4 +1,4 @@
-export default interface Spot {
+export default interface Location {
   id: string;
   available: boolean;
   ticks: boolean;

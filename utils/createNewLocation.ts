@@ -1,6 +1,6 @@
 import supabase from './supabaseClient';
 
-export default async function createNewSpot({
+export default async function createNewLocation({
   name,
   type,
   latitude,
@@ -13,7 +13,7 @@ export default async function createNewSpot({
   longitude: number | undefined;
   device: string;
 }) {
-  const { data, error } = await supabase.rpc('create_new_spot', {
+  const { data, error } = await supabase.rpc('create_new_location', {
     p_name: name,
     p_type: type,
     p_latitude: latitude,

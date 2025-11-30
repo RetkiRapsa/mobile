@@ -1,4 +1,4 @@
-export default interface SpotUpdate {
+export default interface LocationUpdate {
   id: string;
   available: boolean;
   ticks: boolean;

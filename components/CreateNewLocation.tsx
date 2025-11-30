@@ -1,28 +1,25 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  Alert,
-  Animated,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-} from 'react-native';
+import { Alert, Animated, StyleSheet, TextInput, TouchableOpacity, useColorScheme } from 'react-native';
+
+
 
 import { useRouter } from 'expo-router';
+
+
 
 import { useAppContext } from '@/app/_layout';
 import { Text, View } from '@/components/Themed';
 import colors from '@/constants/Colors';
-import Spot from '@/types/Spot';
-import createNewSpot from '@/utils/createNewSpot';
-import { hasNearbySpots } from '@/utils/getNearbySpotsFromCoords';
+import Location from '@/types/Location';
+import createNewLocation from '@/utils/createNewLocation';
+import { hasNearbyLocations } from '@/utils/getNearbyLocationsFromCoords';
 import { getLocation } from '@/utils/location';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
 import ScrollView = Animated.ScrollView;
 
-enum SpotTypeEnum {
+enum LocationTypeEnum {
   CAMPING_AREA = 'CAMPING_AREA',
   FIREPLACE = 'FIREPLACE',
   LAAVU = 'LAAVU',
@@ -34,40 +31,40 @@ enum SpotTypeEnum {
 }
 
 const typeOptions = [
-  { value: SpotTypeEnum.CAMPING_AREA, label: 'Telttailu' },
-  { value: SpotTypeEnum.FIREPLACE, label: 'Nuotio' },
-  { value: SpotTypeEnum.LAAVU, label: 'Laavu' },
-  { value: SpotTypeEnum.TOILET, label: 'WC' },
-  { value: SpotTypeEnum.BEACH, label: 'Uimaranta' },
-  { value: SpotTypeEnum.BRIDGE, label: 'Silta' },
-  { value: SpotTypeEnum.PARKING, label: 'Pysäköinti' },
-  { value: SpotTypeEnum.OTHER, label: 'Muu' },
+  { value: LocationTypeEnum.CAMPING_AREA, label: 'Telttailu' },
+  { value: LocationTypeEnum.FIREPLACE, label: 'Nuotio' },
+  { value: LocationTypeEnum.LAAVU, label: 'Laavu' },
+  { value: LocationTypeEnum.TOILET, label: 'WC' },
+  { value: LocationTypeEnum.BEACH, label: 'Uimaranta' },
+  { value: LocationTypeEnum.BRIDGE, label: 'Silta' },
+  { value: LocationTypeEnum.PARKING, label: 'Pysäköinti' },
+  { value: LocationTypeEnum.OTHER, label: 'Muu' },
 ];
 
 const getIconName = (type: string) => {
   switch (type) {
-    case SpotTypeEnum.CAMPING_AREA:
+    case LocationTypeEnum.CAMPING_AREA:
       return 'tent';
-    case SpotTypeEnum.FIREPLACE:
+    case LocationTypeEnum.FIREPLACE:
       return 'campfire';
-    case SpotTypeEnum.BEACH:
+    case LocationTypeEnum.BEACH:
       return 'waves';
-    case SpotTypeEnum.BRIDGE:
+    case LocationTypeEnum.BRIDGE:
       return 'bridge';
-    case SpotTypeEnum.LAAVU:
+    case LocationTypeEnum.LAAVU:
       return 'chevron-up-box-outline';
-    case SpotTypeEnum.TOILET:
+    case LocationTypeEnum.TOILET:
       return 'toilet';
-    case SpotTypeEnum.PARKING:
+    case LocationTypeEnum.PARKING:
       return 'parking';
     default:
       return 'map-marker-question';
   }
 };
 
-export default function CreateNewSpotScreen() {
+export default function CreateNewLocationScreen() {
   const router = useRouter();
-  const { identity, visibleSpots, setVisibleSpots } = useAppContext();
+  const { identity, visibleLocations, setVisibleLocations } = useAppContext();
   const colorScheme = useColorScheme();
 
   const [form, setForm] = useState({
@@ -91,7 +88,7 @@ export default function CreateNewSpotScreen() {
     [colorScheme]
   );
 
-  // Warn if nearby spots exist
+  // Warn if nearby locations exist
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -100,7 +97,7 @@ export default function CreateNewSpotScreen() {
         if (
           isActive &&
           location &&
-          hasNearbySpots(visibleSpots, location.latitude, location.longitude)
+          hasNearbyLocations(visibleLocations, location.latitude, location.longitude)
         ) {
           Alert.alert(
             'Huomio',
@@ -111,7 +108,7 @@ export default function CreateNewSpotScreen() {
       return () => {
         isActive = false;
       };
-    }, [visibleSpots])
+    }, [visibleLocations])
   );
 
   // Save handler
@@ -131,13 +128,13 @@ export default function CreateNewSpotScreen() {
       return;
     }
     try {
-      const newSpot: Spot = await createNewSpot({
+      const newLocation: Location = await createNewLocation({
         ...form,
         longitude: location.longitude,
         latitude: location.latitude,
         device: identity || 'unknown',
       });
-      if (newSpot.id) {
+      if (newLocation.id) {
         setForm({
           type: '',
           name: '',
@@ -145,15 +142,15 @@ export default function CreateNewSpotScreen() {
           latitude: undefined,
           device: undefined,
         });
-        setVisibleSpots([...(visibleSpots || []), newSpot]);
-        Alert.alert(`${newSpot.name} on nyt lisätty kartalle`);
+        setVisibleLocations([...(visibleLocations || []), newLocation]);
+        Alert.alert(`${newLocation.name} on nyt lisätty kartalle`);
         router.navigate('/');
       }
     } catch {
       Alert.alert('Virhe', 'Kohdetta ei voitu lisätä. Kokeile uudelleen myöhemmin.');
     }
     setLoading(false);
-  }, [form, identity, visibleSpots, setVisibleSpots, router]);
+  }, [form, identity, visibleLocations, setVisibleLocations, router]);
 
   // Render
   return (

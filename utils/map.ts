@@ -1,4 +1,4 @@
-export enum SpotTypeEnum {
+export enum LocationTypeEnum {
   CAMPING_AREA = 'CAMPING_AREA',
   FIREPLACE = 'FIREPLACE',
   LAAVU = 'LAAVU',
@@ -21,21 +21,21 @@ export function getIconName(
   | 'parking'
   | 'map-marker-question' {
   switch (type) {
-    case SpotTypeEnum.CAMPING_AREA:
+    case LocationTypeEnum.CAMPING_AREA:
       return 'tent';
-    case SpotTypeEnum.FIREPLACE:
+    case LocationTypeEnum.FIREPLACE:
       return 'campfire';
-    case SpotTypeEnum.BEACH:
+    case LocationTypeEnum.BEACH:
       return 'waves';
-    case SpotTypeEnum.BRIDGE:
+    case LocationTypeEnum.BRIDGE:
       return 'bridge';
-    case SpotTypeEnum.LAAVU:
+    case LocationTypeEnum.LAAVU:
       return 'chevron-up-box-outline';
-    case SpotTypeEnum.TOILET:
+    case LocationTypeEnum.TOILET:
       return 'toilet';
-    case SpotTypeEnum.PARKING:
+    case LocationTypeEnum.PARKING:
       return 'parking';
-    case SpotTypeEnum.OTHER:
+    case LocationTypeEnum.OTHER:
     default:
       return 'map-marker-question';
   }
