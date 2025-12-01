@@ -18,7 +18,7 @@ import Location from '@/types/Location';
 import LocationUpdate from '@/types/LocationUpdate';
 import getLocationUpdates from '@/utils/getLocationUpdates';
 import { isTooFarFromLocation } from '@/utils/getNearbyLocationsFromCoords';
-import { getLocation } from '@/utils/location';
+import { getCurrentGpsLocation } from '@/utils/gps';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRoute } from '@react-navigation/native';
@@ -95,8 +95,10 @@ export default function LocationDetailsScreen() {
 
   useEffect(() => {
     const checkDistance = async () => {
-      const location = await getLocation();
-      if (await isTooFarFromLocation(location, location!.latitude, location!.longitude)) {
+      const locationFromGPS = await getCurrentGpsLocation();
+      if (
+        await isTooFarFromLocation(location, locationFromGPS!.latitude, locationFromGPS!.longitude)
+      ) {
         setIsTooFar(true);
       } else {
         setIsTooFar(false);
@@ -108,14 +110,14 @@ export default function LocationDetailsScreen() {
 
   useEffect(() => {
     const fetchUpdates = async () => {
-      const updates = await getLocationUpdates(location?.id);
+      const updates = await getLocationUpdates(location?.id, 20);
       setLocationUpdates(
         updates.map((update: any) => {
           const createdAt = new Date(update.created).toLocaleString('fi-FI');
           return {
             id: update.id,
-            locationId: update.location_id,
-            updateText: update.update_text,
+            locationId: update.locationId,
+            updateText: update.updateText,
             device: update.device,
             created: createdAt,
           };

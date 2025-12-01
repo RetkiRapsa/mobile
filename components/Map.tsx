@@ -9,7 +9,7 @@ import ReCenterButton from '@/components/ReCenterButton';
 import RefreshButton from '@/components/RefreshButton';
 import Location from '@/types/Location';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
-import { getLocation } from '@/utils/location';
+import { getCurrentGpsLocation } from '@/utils/gps';
 import { getIconName } from '@/utils/map';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -118,7 +118,7 @@ export default function Map({ location }: MapProps) {
     }
     setRefreshing(true);
     (global as any).lastRefreshTime = now;
-    const currentLocation = await getLocation();
+    const currentLocation = await getCurrentGpsLocation();
     if (currentLocation) {
       const locations = await getNearbyLocationsFromCoords(
         currentLocation.latitude,
@@ -136,7 +136,7 @@ export default function Map({ location }: MapProps) {
 
   // Re-center handler
   const handleRecenter = useCallback(async () => {
-    const currentLocation = await getLocation();
+    const currentLocation = await getCurrentGpsLocation();
     if (currentLocation) {
       resetRegion(currentLocation.latitude, currentLocation.longitude);
     } else {

@@ -5,7 +5,7 @@ import InfoScreen from '@/app/(tabs)/info';
 import { useAppContext } from '@/app/_layout';
 import Map from '@/components/Map';
 import { View } from '@/components/Themed';
-import { getLocation } from '@/utils/location';
+import { getCurrentGpsLocation } from '@/utils/gps';
 import { setSplashInfoSeen } from '@/utils/splashInfo';
 
 export default function MapScreen() {
@@ -14,7 +14,7 @@ export default function MapScreen() {
 
   useEffect(() => {
     (async () => {
-      const currentLocation = await getLocation();
+      const currentLocation = await getCurrentGpsLocation();
       if (currentLocation) {
         setLocation(currentLocation);
       } else {

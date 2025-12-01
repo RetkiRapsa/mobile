@@ -11,9 +11,9 @@ import { useAppContext } from '@/app/_layout';
 import { Text, View } from '@/components/Themed';
 import colors from '@/constants/Colors';
 import Location from '@/types/Location';
-import createNewLocation from '@/utils/createNewLocation';
+import createNewLocation from '@/utils/createLocation';
 import { hasNearbyLocations } from '@/utils/getNearbyLocationsFromCoords';
-import { getLocation } from '@/utils/location';
+import { getCurrentGpsLocation } from '@/utils/gps';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -93,7 +93,7 @@ export default function CreateNewLocationScreen() {
     useCallback(() => {
       let isActive = true;
       (async () => {
-        const location = await getLocation();
+        const location = await getCurrentGpsLocation();
         if (
           isActive &&
           location &&
@@ -118,7 +118,7 @@ export default function CreateNewLocationScreen() {
       return;
     }
     setLoading(true);
-    const location = await getLocation();
+    const location = await getCurrentGpsLocation();
     if (!location) {
       Alert.alert(
         'Virhe',

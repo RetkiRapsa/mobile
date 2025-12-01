@@ -1,21 +1,6 @@
 import Location from '@/types/Location';
 
-import supabase from './supabaseClient';
-
-export async function hasNewLocationsInPastHour(): Promise<boolean> {
-  const oneHourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { data, error } = await supabase
-    .from('locations')
-    .select('id')
-    .gte('created_at', oneHourAgoIso)
-    .limit(1);
-
-  if (error) {
-    throw error;
-  }
-
-  return (data?.length ?? 0) > 0;
-}
+import { apiGetNearbyLocations } from './client';
 
 export default async function getNearbyLocationsFromCoords(
   latitude: number,
@@ -23,17 +8,7 @@ export default async function getNearbyLocationsFromCoords(
   radiusInMeters: number = 100 * 1000,
   limit: number = 1000
 ) {
-  const { data, error } = await supabase.rpc('get_nearby_locations', {
-    lat: latitude,
-    lon: longitude,
-    max_distance_meters: radiusInMeters,
-    limit_count: limit,
-  });
-
-  if (error) {
-    throw error;
-  }
-
+  const { data } = await apiGetNearbyLocations(latitude, longitude, radiusInMeters, limit);
   return data;
 }
 

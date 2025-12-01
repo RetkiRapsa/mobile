@@ -8,7 +8,7 @@ import { Text, View } from '@/components/Themed';
 import colors from '@/constants/Colors';
 import Location from '@/types/Location';
 import LocationUpdate from '@/types/LocationUpdate';
-import createNewUpdate from '@/utils/createNewUpdate';
+import { createLocationUpdate } from '@/utils/createLocationUpdate';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
 
 import ScrollView = Animated.ScrollView;
@@ -78,7 +78,7 @@ export default function CreateNewLocationUpdate({
     }
     setLoading(true);
     try {
-      const newUpdate: LocationUpdate = await createNewUpdate({
+      const newUpdate: LocationUpdate = await createLocationUpdate({
         ...form,
         device: identity || 'unknown',
       });
