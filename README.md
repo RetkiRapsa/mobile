@@ -20,7 +20,7 @@ A cross-platform mobile application built with React Native and TypeScript.
 
 ### Configuration
 
-To connect the app to the backend server, update the `BASE_URL` in `src/config/index.ts` with the appropriate IP
+To connect the app to the backend server, update the `BASE_URL` in `utils/client.ts` with the appropriate IP
 address.
 
 - AWS EC2 Instance: 13.62.228.65
