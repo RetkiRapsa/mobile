@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { StyleSheet, Text, useColorScheme, View } from 'react-native';
 
 import colors from '@/constants/Colors';
 
@@ -23,7 +23,7 @@ export default function InstructionsScreen() {
       <Text style={{ color: foregroundColor }}>Copyright (c) {new Date().getFullYear()}</Text>
       <Separator />
       <Text style={{ color: foregroundColor }}>Sovelluksen toteutus</Text>
-      <Text style={{ color: foregroundColor }}>AgaSoft / Artur Gajewski</Text>
+      <Text style={{ color: foregroundColor }}>Artur Gajewski</Text>
       <Separator />
       <View style={{ marginTop: 20, marginBottom: 20, width: '80%' }}>
         <Text
