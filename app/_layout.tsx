@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
-import 'react-native-reanimated';
 
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
