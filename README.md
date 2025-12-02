@@ -20,8 +20,10 @@ A cross-platform mobile application built with React Native and TypeScript.
 
 ### Configuration
 
-To connect the app to the backend server, update the `BASE_URL` in `utils/client.ts` with the appropriate IP
-address.
+To connect the app to a specific backend server, create `.env.local` file in the root directory with the following
+content:
+
+    EXPO_PUBLIC_RETKIRAPSA_API_IP=<SERVER_IP_ADDRESS>
 
 - AWS EC2 Instance: 13.62.228.65
 - Local Network Instance for iPhone via Expo Go: 192.168.8.160
