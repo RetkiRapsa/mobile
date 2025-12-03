@@ -20,7 +20,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.arturgajewski.RetkiRapsa",
+      "bundleIdentifier": "com.agasoft.RetkiRapsa",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSAppTransportSecurity": {
@@ -39,7 +39,8 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],
-      "package": "com.arturgajewski.RetkiRapsa"
+      "package": "com.agasoft.RetkiRapsa",
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
