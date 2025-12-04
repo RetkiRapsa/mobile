@@ -7,6 +7,7 @@ import Map from '@/components/Map';
 import { View as ThemedView } from '@/components/Themed';
 import { DEFAULT_LOCATION_LATITUDE, DEFAULT_LOCATION_LONGITUDE } from '@/constants/Location';
 import { getCurrentGpsLocation } from '@/utils/gps';
+import { devLog, logError } from '@/utils/logger';
 import { setSplashInfoSeen } from '@/utils/splashInfo';
 
 export default function MapScreen() {
@@ -26,22 +27,16 @@ export default function MapScreen() {
 
     (async () => {
       try {
-        if (__DEV__) {
-          console.log('Fetching GPS location...');
-        }
+        devLog('Fetching GPS location...');
         const currentLocation = await getCurrentGpsLocation();
         if (currentLocation) {
-          if (__DEV__) {
-            console.log('GPS location found:', currentLocation.latitude, currentLocation.longitude);
-          }
+          devLog('GPS location found:', currentLocation.latitude, currentLocation.longitude);
           setLocation(currentLocation);
           setUsingDefaultLocation(false); // GPS worked
         } else {
           // GPS failed or timed out - use default Helsinki location as fallback
           // This allows the app to still work and show nearby locations
-          if (__DEV__) {
-            console.log('GPS location not available, using default Helsinki location');
-          }
+          devLog('GPS location not available, using default Helsinki location');
           setLocation({
             latitude: DEFAULT_LOCATION_LATITUDE,
             longitude: DEFAULT_LOCATION_LONGITUDE,
@@ -49,7 +44,7 @@ export default function MapScreen() {
           setUsingDefaultLocation(true); // Flag that we're using fallback
         }
       } catch (error) {
-        console.error('Error fetching GPS location:', error);
+        logError('Error fetching GPS location:', error);
         setHasError(true);
         // Use default location even on error
         setLocation({
@@ -106,7 +101,7 @@ export default function MapScreen() {
       </ThemedView>
     );
   } catch (error) {
-    console.error('Map render error:', error);
+    logError('Map render error:', error);
     return (
       <View
         style={[

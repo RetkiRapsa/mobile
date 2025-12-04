@@ -18,6 +18,7 @@ import {
 import Location from '@/types/Location';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
+import { devLog, logError } from '@/utils/logger';
 import { getIconName } from '@/utils/map';
 import { safeAlert } from '@/utils/safeAlert';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -69,9 +70,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
       location.longitude === ERROR_LOCATION_LONGITUDE
     ) {
       // Don't show Alert in production - it can cause crashes
-      if (__DEV__) {
-        safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
-      }
+      devLog('Skipping location fetch - error state coordinates');
       setLoadingError('Sijaintia ei voitu paikallistaa');
       setLocationFound(false);
     } else {
@@ -89,9 +88,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
       location.latitude === ERROR_LOCATION_LATITUDE &&
       location.longitude === ERROR_LOCATION_LONGITUDE
     ) {
-      if (__DEV__) {
-        console.log('Skipping location fetch - error state coordinates');
-      }
+      devLog('Skipping location fetch - error state coordinates');
       setLoadingError('Sijaintia ei voitu määrittää');
       setLocationFound(false);
       return;
@@ -99,30 +96,21 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
 
     const fetchNearbyLocations = async () => {
       try {
-        if (__DEV__) {
-          console.log('Fetching nearby locations for:', location.latitude, location.longitude);
-        }
+        devLog('Fetching nearby locations for:', location.latitude, location.longitude);
         const nearby = await getNearbyLocationsFromCoords(
           location.latitude,
           location.longitude,
           MAP_SEARCH_RADIUS,
           MAP_MAX_SPOTS
         );
-        if (__DEV__) {
-          console.log('Fetched nearby locations:', nearby.length);
-        }
+        devLog('Fetched nearby locations:', nearby.length);
         setVisibleLocations(nearby);
         setLoadingError(null);
       } catch (error) {
-        console.error('Failed to fetch nearby locations:', error);
+        logError('Failed to fetch nearby locations:', error);
         setLoadingError('Kohteiden lataus epäonnistui');
         // Don't show alerts in production - can cause crashes
-        if (__DEV__) {
-          safeAlert(
-            'Virhe',
-            'Kohteiden lataus epäonnistui. Tarkista internet-yhteytesi ja yritä uudelleen.'
-          );
-        }
+        devLog('API error - not showing alert in production');
       }
     };
     fetchNearbyLocations();

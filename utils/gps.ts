@@ -1,23 +1,19 @@
 import * as Location from 'expo-location';
 
+import { devLog, logError } from './logger';
+
 export const getCurrentGpsLocation = async () => {
   try {
-    if (__DEV__) {
-      console.log('Requesting location permissions...');
-    }
+    devLog('Requesting location permissions...');
 
     let { status } = await Location.requestForegroundPermissionsAsync();
 
     if (status !== 'granted') {
-      if (__DEV__) {
-        console.log('Location permission denied');
-      }
+      devLog('Location permission denied');
       return undefined;
     }
 
-    if (__DEV__) {
-      console.log('Getting current position...');
-    }
+    devLog('Getting current position...');
 
     // Add timeout to prevent hanging - increased to 30 seconds for production
     const locationPromise = Location.getCurrentPositionAsync({
@@ -28,9 +24,7 @@ export const getCurrentGpsLocation = async () => {
 
     const timeoutPromise = new Promise<null>((resolve) => {
       setTimeout(() => {
-        if (__DEV__) {
-          console.log('Location fetch timeout after 30 seconds');
-        }
+        devLog('Location fetch timeout after 30 seconds');
         resolve(null);
       }, 30000); // 30 second timeout for production
     });
@@ -38,19 +32,15 @@ export const getCurrentGpsLocation = async () => {
     const loc = await Promise.race([locationPromise, timeoutPromise]);
 
     if (loc) {
-      if (__DEV__) {
-        console.log('Location found:', loc.coords.latitude, loc.coords.longitude);
-      }
+      devLog('Location found:', loc.coords.latitude, loc.coords.longitude);
       return loc.coords;
     } else {
-      if (__DEV__) {
-        console.log('Location fetch timed out');
-      }
+      devLog('Location fetch timed out');
       return undefined;
     }
   } catch (error) {
     // Always log errors
-    console.error('Error getting GPS location:', error);
+    logError('Error getting GPS location:', error);
     return undefined;
   }
 };

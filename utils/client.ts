@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import { clearToken, getValidToken, registerDeviceAndGetToken } from './auth';
+import { devLog, logError } from './logger';
 
 const RETKIRAPSA_API_IP = process.env.EXPO_PUBLIC_RETKIRAPSA_API_IP || 'localhost';
 const API_BASE = `http://${RETKIRAPSA_API_IP}:8080/api/locations`;
@@ -34,7 +35,7 @@ api.interceptors.response.use(
 
     // Log network errors for debugging
     if (!error.response) {
-      console.error('Network error - no response received:', {
+      logError('Network error - no response received:', {
         message: error.message,
         url: originalRequest?.url,
         method: originalRequest?.method,
@@ -42,17 +43,15 @@ api.interceptors.response.use(
 
       // Check if it's a cleartext traffic error
       if (error.message?.includes('Network Error') || error.message?.includes('CLEARTEXT')) {
-        console.error('CLEARTEXT HTTP ERROR: Android may be blocking HTTP traffic');
-        console.error('Ensure usesCleartextTraffic is enabled in app.json');
-        console.error('API URL:', API_BASE);
+        logError('CLEARTEXT HTTP ERROR: Android may be blocking HTTP traffic');
+        logError('Ensure usesCleartextTraffic is enabled in app.json');
+        logError('API URL:', API_BASE);
       }
     }
 
     // If we get 403 and haven't already retried
     if (error.response?.status === 403 && !originalRequest._retry) {
-      if (__DEV__) {
-        console.log('Got 403, attempting to refresh token and retry...');
-      }
+      devLog('Got 403, attempting to refresh token and retry...');
       originalRequest._retry = true;
 
       try {
@@ -64,12 +63,10 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
 
         // Retry the request
-        if (__DEV__) {
-          console.log('Retrying request with new token...');
-        }
+        devLog('Retrying request with new token...');
         return api(originalRequest);
       } catch (refreshError) {
-        console.error('Failed to refresh token:', refreshError);
+        logError('Failed to refresh token:', refreshError);
         return Promise.reject(refreshError);
       }
     }

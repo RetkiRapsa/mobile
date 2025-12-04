@@ -11,6 +11,7 @@ import Location from '@/types/Location';
 import LocationUpdate from '@/types/LocationUpdate';
 import { createLocationUpdate } from '@/utils/createLocationUpdate';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
+import { devLog } from '@/utils/logger';
 
 import ScrollView = Animated.ScrollView;
 
@@ -80,24 +81,20 @@ export default function CreateNewLocationUpdate({
 
     setLoading(true);
     try {
-      if (__DEV__) {
-        console.log('Creating location update with form:', {
-          locationId: form.locationId,
-          updateText: form.updateText,
-          available: form.available,
-          ticks: form.ticks,
-          device: identity || 'unknown',
-        });
-      }
+      devLog('Creating location update with form:', {
+        locationId: form.locationId,
+        updateText: form.updateText,
+        available: form.available,
+        ticks: form.ticks,
+        device: identity || 'unknown',
+      });
 
       const newUpdate: LocationUpdate = await createLocationUpdate({
         ...form,
         device: identity || 'unknown',
       });
 
-      if (__DEV__) {
-        console.log('Location update created:', newUpdate);
-      }
+      devLog('Location update created:', newUpdate);
 
       if (!newUpdate.id) {
         Alert.alert('Virhe', 'Päivitystä ei voitu tallentaa. Yritä uudelleen.');
