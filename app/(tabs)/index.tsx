@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import InfoScreen from '@/app/(tabs)/info';
 import { useAppContext } from '@/app/_layout';
 import Map from '@/components/Map';
-import { View } from '@/components/Themed';
-import { ERROR_LOCATION_LATITUDE, ERROR_LOCATION_LONGITUDE } from '@/constants/Location';
+import { View as ThemedView } from '@/components/Themed';
+import { DEFAULT_LOCATION_LATITUDE, DEFAULT_LOCATION_LONGITUDE } from '@/constants/Location';
 import { getCurrentGpsLocation } from '@/utils/gps';
 import { setSplashInfoSeen } from '@/utils/splashInfo';
 
 export default function MapScreen() {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [usingDefaultLocation, setUsingDefaultLocation] = useState(false);
   const { hasReadSplashInfo, setHasReadSplashInfo } = useAppContext();
 
   // Only fetch GPS location AFTER splash screen is dismissed
@@ -33,15 +35,28 @@ export default function MapScreen() {
             console.log('GPS location found:', currentLocation.latitude, currentLocation.longitude);
           }
           setLocation(currentLocation);
+          setUsingDefaultLocation(false); // GPS worked
         } else {
+          // GPS failed or timed out - use default Helsinki location as fallback
+          // This allows the app to still work and show nearby locations
           if (__DEV__) {
-            console.log('GPS location not available, using error state');
+            console.log('GPS location not available, using default Helsinki location');
           }
-          setLocation({ latitude: ERROR_LOCATION_LATITUDE, longitude: ERROR_LOCATION_LONGITUDE });
+          setLocation({
+            latitude: DEFAULT_LOCATION_LATITUDE,
+            longitude: DEFAULT_LOCATION_LONGITUDE,
+          });
+          setUsingDefaultLocation(true); // Flag that we're using fallback
         }
       } catch (error) {
         console.error('Error fetching GPS location:', error);
-        setLocation({ latitude: ERROR_LOCATION_LATITUDE, longitude: ERROR_LOCATION_LONGITUDE });
+        setHasError(true);
+        // Use default location even on error
+        setLocation({
+          latitude: DEFAULT_LOCATION_LATITUDE,
+          longitude: DEFAULT_LOCATION_LONGITUDE,
+        });
+        setUsingDefaultLocation(true); // Flag that we're using fallback
       } finally {
         setIsLoadingLocation(false);
       }
@@ -50,7 +65,7 @@ export default function MapScreen() {
 
   if (!hasReadSplashInfo) {
     return (
-      <View style={styles.container}>
+      <ThemedView style={styles.container}>
         <InfoScreen
           onAcknowledge={() => {
             setHasReadSplashInfo(true);
@@ -58,6 +73,23 @@ export default function MapScreen() {
           }}
           showButton={true}
         />
+      </ThemedView>
+    );
+  }
+
+  // Show error screen if something went wrong
+  if (hasError) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <Text style={{ color: '#fff', fontSize: 18, textAlign: 'center', paddingHorizontal: 20 }}>
+          Sovelluksen käynnistys epäonnistui.{'\n\n'}
+          Sulje ja avaa sovellus uudelleen.
+        </Text>
       </View>
     );
   }
@@ -67,11 +99,28 @@ export default function MapScreen() {
   // 2. Showing "Ladataan tietoja..." loading screen
   // 3. Guards in useEffects prevent any operations on null location
   // This works for both first launch (after splash) and second launch (direct)
-  return (
-    <View style={styles.container}>
-      <Map location={location} />
-    </View>
-  );
+  try {
+    return (
+      <ThemedView style={styles.container}>
+        <Map location={location} usingDefaultLocation={usingDefaultLocation} />
+      </ThemedView>
+    );
+  } catch (error) {
+    console.error('Map render error:', error);
+    return (
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <Text style={{ color: '#fff', fontSize: 18, textAlign: 'center', paddingHorizontal: 20 }}>
+          Kartan lataus epäonnistui.{'\n\n'}
+          Sulje ja avaa sovellus uudelleen.
+        </Text>
+      </View>
+    );
+  }
 }
 
 const styles = StyleSheet.create({

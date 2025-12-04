@@ -24,9 +24,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface MapProps {
   location: { latitude: number; longitude: number } | null;
+  usingDefaultLocation?: boolean;
 }
 
-export default function Map({ location }: MapProps) {
+export default function Map({ location, usingDefaultLocation = false }: MapProps) {
   // Hooks
   const mapRef = useRef<MapView | null>(null);
   const lastRefreshTimeRef = useRef<number>(0);
@@ -83,7 +84,7 @@ export default function Map({ location }: MapProps) {
   useEffect(() => {
     if (!location) return;
 
-    // Don't try to fetch if location is the error state
+    // Don't try to fetch if location is the error state (but DO fetch if it's the default Helsinki location)
     if (
       location.latitude === ERROR_LOCATION_LATITUDE &&
       location.longitude === ERROR_LOCATION_LONGITUDE
@@ -229,6 +230,15 @@ export default function Map({ location }: MapProps) {
       >
         {renderMarkers}
       </MapView>
+
+      {/* Show notification if using default location */}
+      {usingDefaultLocation && (
+        <View style={styles.locationWarningBanner}>
+          <Text style={styles.locationWarningText}>⚠️ Sijaintiasi ei voitu määrittää</Text>
+          <Text style={styles.locationWarningSubtext}>Näytetään Helsinki-alueen kohteita</Text>
+        </View>
+      )}
+
       <RefreshButton onPress={handleRefresh} />
       <ReCenterButton onPress={handleRecenter} />
     </>
@@ -251,5 +261,29 @@ const styles = StyleSheet.create({
   map: {
     width: '100%',
     height: '100%',
+  },
+  locationWarningBanner: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(255, 152, 0, 0.95)',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  locationWarningText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 4,
+  },
+  locationWarningSubtext: {
+    fontSize: 14,
+    color: '#000',
   },
 });

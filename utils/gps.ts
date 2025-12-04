@@ -19,20 +19,20 @@ export const getCurrentGpsLocation = async () => {
       console.log('Getting current position...');
     }
 
-    // Add timeout to prevent hanging
+    // Add timeout to prevent hanging - increased to 30 seconds for production
     const locationPromise = Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
-      timeInterval: 5000,
+      timeInterval: 10000,
       distanceInterval: 0,
     });
 
     const timeoutPromise = new Promise<null>((resolve) => {
       setTimeout(() => {
         if (__DEV__) {
-          console.log('Location fetch timeout after 10 seconds');
+          console.log('Location fetch timeout after 30 seconds');
         }
         resolve(null);
-      }, 10000);
+      }, 30000); // 30 second timeout for production
     });
 
     const loc = await Promise.race([locationPromise, timeoutPromise]);
