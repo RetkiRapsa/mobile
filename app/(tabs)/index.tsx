@@ -11,9 +11,17 @@ import { setSplashInfoSeen } from '@/utils/splashInfo';
 
 export default function MapScreen() {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const { hasReadSplashInfo, setHasReadSplashInfo } = useAppContext();
 
+  // Only fetch GPS location AFTER splash screen is dismissed
   useEffect(() => {
+    if (!hasReadSplashInfo) {
+      return; // Don't fetch until user dismisses splash
+    }
+
+    setIsLoadingLocation(true);
+
     (async () => {
       try {
         if (__DEV__) {
@@ -34,9 +42,11 @@ export default function MapScreen() {
       } catch (error) {
         console.error('Error fetching GPS location:', error);
         setLocation({ latitude: ERROR_LOCATION_LATITUDE, longitude: ERROR_LOCATION_LONGITUDE });
+      } finally {
+        setIsLoadingLocation(false);
       }
     })();
-  }, []);
+  }, [hasReadSplashInfo]); // Only trigger when splash screen is dismissed
 
   if (!hasReadSplashInfo) {
     return (
@@ -52,6 +62,7 @@ export default function MapScreen() {
     );
   }
 
+  // Map component safely handles null location by showing "Ladataan tietoja..."
   return (
     <View style={styles.container}>
       <Map location={location} />

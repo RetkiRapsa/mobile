@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
 
 import { useRouter } from 'expo-router';
@@ -19,6 +19,7 @@ import Location from '@/types/Location';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
 import { getIconName } from '@/utils/map';
+import { safeAlert } from '@/utils/safeAlert';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface MapProps {
@@ -66,10 +67,15 @@ export default function Map({ location }: MapProps) {
       location.latitude === ERROR_LOCATION_LATITUDE &&
       location.longitude === ERROR_LOCATION_LONGITUDE
     ) {
-      Alert.alert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
+      // Don't show Alert in production - it can cause crashes
+      if (__DEV__) {
+        safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
+      }
+      setLoadingError('Sijaintia ei voitu paikallistaa');
       setLocationFound(false);
     } else {
       setLocationFound(true);
+      setLoadingError(null);
       resetRegion(location.latitude, location.longitude);
     }
   }, [location, resetRegion]);
@@ -109,10 +115,13 @@ export default function Map({ location }: MapProps) {
       } catch (error) {
         console.error('Failed to fetch nearby locations:', error);
         setLoadingError('Kohteiden lataus epäonnistui');
-        Alert.alert(
-          'Virhe',
-          'Kohteiden lataus epäonnistui. Tarkista internet-yhteytesi ja yritä uudelleen.'
-        );
+        // Don't show alerts in production - can cause crashes
+        if (__DEV__) {
+          safeAlert(
+            'Virhe',
+            'Kohteiden lataus epäonnistui. Tarkista internet-yhteytesi ja yritä uudelleen.'
+          );
+        }
       }
     };
     fetchNearbyLocations();
@@ -151,7 +160,7 @@ export default function Map({ location }: MapProps) {
     if (refreshing) return;
     const now = Date.now();
     if (now - lastRefreshTimeRef.current < MAP_REFRESH_COOLDOWN_MS) {
-      Alert.alert(
+      safeAlert(
         'Huomio',
         'Et voi päivittää karttaa näin usein. Odota hetki ennen kuin päivität uudelleen.'
       );
@@ -168,14 +177,14 @@ export default function Map({ location }: MapProps) {
           MAP_SEARCH_RADIUS,
           MAP_MAX_SPOTS
         );
-        Alert.alert('Päivitetty', `Löydettiin ${locations.length} kohdetta.`);
+        safeAlert('Päivitetty', `Löydettiin ${locations.length} kohdetta.`);
         setVisibleLocations(locations);
       } else {
-        Alert.alert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
+        safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
       }
     } catch (error) {
       console.error('Refresh failed:', error);
-      Alert.alert('Virhe', 'Päivitys epäonnistui. Yritä uudelleen.');
+      safeAlert('Virhe', 'Päivitys epäonnistui. Yritä uudelleen.');
     } finally {
       setRefreshing(false);
     }
@@ -187,7 +196,7 @@ export default function Map({ location }: MapProps) {
     if (currentLocation) {
       resetRegion(currentLocation.latitude, currentLocation.longitude);
     } else {
-      Alert.alert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
+      safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
     }
   }, [resetRegion]);
 
