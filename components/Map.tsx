@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
 
-import { useNavigation, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 import { useAppContext } from '@/app/_layout';
 import ReCenterButton from '@/components/ReCenterButton';
@@ -25,9 +25,8 @@ const MAX_SPOTS = 50;
 export default function Map({ location }: MapProps) {
   // Hooks
   const mapRef = useRef<MapView | null>(null);
-  const navigation = useNavigation();
   const router = useRouter();
-  const { visibleLocations, setVisibleLocations, identity } = useAppContext();
+  const { visibleLocations, setVisibleLocations, setSelectedLocation } = useAppContext();
 
   const [locationFound, setLocationFound] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -98,8 +97,10 @@ export default function Map({ location }: MapProps) {
         <Marker
           key={location.id}
           coordinate={{ latitude: location.latitude, longitude: location.longitude }}
-          // @ts-ignore-next-line
-          onPress={() => navigation.navigate('locationDetails', { location })}
+          onPress={() => {
+            setSelectedLocation(location);
+            router.push('/locationDetails');
+          }}
         >
           <MaterialCommunityIcons
             style={{
@@ -114,7 +115,7 @@ export default function Map({ location }: MapProps) {
           />
         </Marker>
       )),
-    [visibleLocations, navigation]
+    [visibleLocations, router, setSelectedLocation]
   );
 
   // Refresh handler

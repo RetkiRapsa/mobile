@@ -1,27 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  useColorScheme,
-} from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View, } from 'react-native';
 
 import * as Clipboard from 'expo-clipboard';
 
 import { useAppContext } from '@/app/_layout';
 import CreateNewLocationUpdate from '@/components/CreateNewLocationUpdate';
 import colors from '@/constants/Colors';
-import Location from '@/types/Location';
 import LocationUpdate from '@/types/LocationUpdate';
 import getLocationUpdates from '@/utils/getLocationUpdates';
 import { isTooFarFromLocation } from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useRoute } from '@react-navigation/native';
 
 enum LocationTypeEnum {
   CAMPING_AREA = 'CAMPING_AREA',
@@ -79,15 +69,24 @@ export default function LocationDetailsScreen() {
   const footerBackgroundColor = useColorScheme() === 'dark' ? '#131313' : '#ffffff';
   const footerBorderColor = useColorScheme() === 'dark' ? '#131313' : '#cccccc';
   const foregroundColor = useColorScheme() === 'dark' ? colors.dark.text : colors.light.text;
-  const route = useRoute();
   const [locationUpdates, setLocationUpdates] = useState<LocationUpdate[]>([]);
   const [addLocationUpdate, setAddLocationUpdate] = useState(false);
   const [updatedAvailable, setUpdatedAvailable] = useState(false);
   const [updatedTicks, setUpdatedTicks] = useState(false);
   const [lastUpdateCreatedAt, setLastUpdateCreatedAt] = useState<string | undefined>(undefined);
   const [isTooFar, setIsTooFar] = useState(false);
-  const { location } = route.params as { location: Location };
-  const { identity, setVisibleLocations, visibleLocations } = useAppContext();
+  const { selectedLocation, identity, setVisibleLocations, visibleLocations } = useAppContext();
+
+  // If no location is selected, show error
+  if (!selectedLocation) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor }}>
+        <Text style={{ color: foregroundColor }}>Sijaintia ei valittu</Text>
+      </View>
+    );
+  }
+
+  const location = selectedLocation;
 
   const copyToClipboard = async (text: string) => {
     await Clipboard.setStringAsync(text);
