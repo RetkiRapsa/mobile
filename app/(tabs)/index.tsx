@@ -62,7 +62,11 @@ export default function MapScreen() {
     );
   }
 
-  // Map component safely handles null location by showing "Ladataan tietoja..."
+  // SAFETY: Map component safely handles null location by:
+  // 1. Checking "if (!location || !locationFound)" in render
+  // 2. Showing "Ladataan tietoja..." loading screen
+  // 3. Guards in useEffects prevent any operations on null location
+  // This works for both first launch (after splash) and second launch (direct)
   return (
     <View style={styles.container}>
       <Map location={location} />
