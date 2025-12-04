@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { useRouter } from 'expo-router';
@@ -27,111 +27,7 @@ interface MapProps {
   usingDefaultLocation?: boolean;
 }
 
-// Lazy load web map component
-const LeafletMapWeb = Platform.OS === 'web' ? React.lazy(() => import('./Map.web')) : null;
-
 export default function Map({ location, usingDefaultLocation = false }: MapProps) {
-  const router = useRouter();
-  const { visibleLocations, setVisibleLocations, setSelectedLocation } = useAppContext();
-  const [refreshing, setRefreshing] = useState(false);
-  const lastRefreshTimeRef = useRef<number>(0);
-
-  // Refresh handler (works for both web and mobile)
-  const handleRefresh = useCallback(async () => {
-    if (refreshing) return;
-    const now = Date.now();
-    if (now - lastRefreshTimeRef.current < MAP_REFRESH_COOLDOWN_MS) {
-      safeAlert(
-        'Huomio',
-        'Et voi päivittää karttaa näin usein. Odota hetki ennen kuin päivität uudelleen.'
-      );
-      return;
-    }
-    setRefreshing(true);
-    try {
-      lastRefreshTimeRef.current = now;
-      const currentLocation = await getCurrentGpsLocation();
-      if (currentLocation) {
-        const locations = await getNearbyLocationsFromCoords(
-          currentLocation.latitude,
-          currentLocation.longitude,
-          MAP_SEARCH_RADIUS,
-          MAP_MAX_SPOTS
-        );
-        safeAlert('Päivitetty', `Löydettiin ${locations.length} kohdetta.`);
-        setVisibleLocations(locations);
-      } else {
-        safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
-      }
-    } catch (error) {
-      logError('Refresh failed:', error);
-      safeAlert('Virhe', 'Päivitys epäonnistui. Yritä uudelleen.');
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refreshing, setVisibleLocations]);
-
-  // Re-center handler (works for both web and mobile)
-  const handleRecenter = useCallback(async () => {
-    const currentLocation = await getCurrentGpsLocation();
-    if (currentLocation) {
-      try {
-        const locations = await getNearbyLocationsFromCoords(
-          currentLocation.latitude,
-          currentLocation.longitude,
-          MAP_SEARCH_RADIUS,
-          MAP_MAX_SPOTS
-        );
-        setVisibleLocations(locations);
-      } catch (error) {
-        logError('Failed to fetch locations after re-center:', error);
-      }
-    } else {
-      safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
-    }
-  }, [setVisibleLocations]);
-
-  // If on web platform, use React Leaflet directly
-  if (Platform.OS === 'web' && LeafletMapWeb) {
-    return (
-      <>
-        <React.Suspense
-          fallback={
-            <View style={styles.container}>
-              <Text>Loading map...</Text>
-            </View>
-          }
-        >
-          <LeafletMapWeb
-            location={location}
-            visibleLocations={visibleLocations}
-            onMarkerClick={(loc) => {
-              setSelectedLocation(loc);
-              router.push('/locationDetails');
-            }}
-          />
-        </React.Suspense>
-
-        {/* Show notification if using default location */}
-        {usingDefaultLocation && (
-          <View style={styles.locationWarningBanner}>
-            <Text style={styles.locationWarningText}>⚠️ Sijaintiasi ei voitu määrittää</Text>
-            <Text style={styles.locationWarningSubtext}>Näytetään Helsinki-alueen kohteita</Text>
-          </View>
-        )}
-
-        <RefreshButton onPress={handleRefresh} />
-        <ReCenterButton onPress={handleRecenter} />
-      </>
-    );
-  }
-
-  // For mobile platforms (iOS/Android), use WebView
-  return <MobileMapView location={location} usingDefaultLocation={usingDefaultLocation} />;
-}
-
-// Mobile map component using WebView
-function MobileMapView({ location, usingDefaultLocation = false }: MapProps) {
   // Hooks
   const webViewRef = useRef<WebView | null>(null);
   const lastRefreshTimeRef = useRef<number>(0);
