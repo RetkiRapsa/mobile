@@ -32,9 +32,27 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Log network errors for debugging
+    if (!error.response) {
+      console.error('Network error - no response received:', {
+        message: error.message,
+        url: originalRequest?.url,
+        method: originalRequest?.method,
+      });
+
+      // Check if it's a cleartext traffic error
+      if (error.message?.includes('Network Error') || error.message?.includes('CLEARTEXT')) {
+        console.error('CLEARTEXT HTTP ERROR: Android may be blocking HTTP traffic');
+        console.error('Ensure usesCleartextTraffic is enabled in app.json');
+        console.error('API URL:', API_BASE);
+      }
+    }
+
     // If we get 403 and haven't already retried
     if (error.response?.status === 403 && !originalRequest._retry) {
-      console.log('Got 403, attempting to refresh token and retry...');
+      if (__DEV__) {
+        console.log('Got 403, attempting to refresh token and retry...');
+      }
       originalRequest._retry = true;
 
       try {
@@ -46,7 +64,9 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
 
         // Retry the request
-        console.log('Retrying request with new token...');
+        if (__DEV__) {
+          console.log('Retrying request with new token...');
+        }
         return api(originalRequest);
       } catch (refreshError) {
         console.error('Failed to refresh token:', refreshError);

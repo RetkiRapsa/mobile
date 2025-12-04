@@ -15,10 +15,24 @@ export default function MapScreen() {
 
   useEffect(() => {
     (async () => {
-      const currentLocation = await getCurrentGpsLocation();
-      if (currentLocation) {
-        setLocation(currentLocation);
-      } else {
+      try {
+        if (__DEV__) {
+          console.log('Fetching GPS location...');
+        }
+        const currentLocation = await getCurrentGpsLocation();
+        if (currentLocation) {
+          if (__DEV__) {
+            console.log('GPS location found:', currentLocation.latitude, currentLocation.longitude);
+          }
+          setLocation(currentLocation);
+        } else {
+          if (__DEV__) {
+            console.log('GPS location not available, using error state');
+          }
+          setLocation({ latitude: ERROR_LOCATION_LATITUDE, longitude: ERROR_LOCATION_LONGITUDE });
+        }
+      } catch (error) {
+        console.error('Error fetching GPS location:', error);
         setLocation({ latitude: ERROR_LOCATION_LATITUDE, longitude: ERROR_LOCATION_LONGITUDE });
       }
     })();

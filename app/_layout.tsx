@@ -5,6 +5,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 
+import { ProductionErrorBoundary } from '@/components/ProductionErrorBoundary';
 import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import Location from '@/types/Location';
@@ -78,8 +79,14 @@ function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const fetchIdentity = async () => {
-      const id = await getOrCreateUUID();
-      setIdentity(id);
+      try {
+        const id = await getOrCreateUUID();
+        setIdentity(id);
+      } catch (error) {
+        console.error('Failed to fetch identity:', error);
+        // Set a fallback UUID to prevent crashes
+        setIdentity('fallback-' + Date.now());
+      }
     };
     fetchIdentity();
   }, []);
@@ -105,30 +112,32 @@ function AppProvider({ children }: { children: React.ReactNode }) {
 function RootLayoutNav({ children }: { children?: React.ReactNode }) {
   const colorScheme = useColorScheme();
   return (
-    <AppProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        {children}
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="modal"
-            options={{
-              presentation: 'card',
-              headerTitle: 'Tietoa',
-              headerBackTitle: 'Takaisin',
-            }}
-          />
-          <Stack.Screen
-            name="locationDetails"
-            options={{
-              presentation: 'card',
-              headerTitle: 'Kohteen tiedot',
-              headerBackTitle: 'Takaisin',
-            }}
-          />
-        </Stack>
-      </ThemeProvider>
-    </AppProvider>
+    <ProductionErrorBoundary>
+      <AppProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          {children}
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options={{
+                presentation: 'card',
+                headerTitle: 'Tietoa',
+                headerBackTitle: 'Takaisin',
+              }}
+            />
+            <Stack.Screen
+              name="locationDetails"
+              options={{
+                presentation: 'card',
+                headerTitle: 'Kohteen tiedot',
+                headerBackTitle: 'Takaisin',
+              }}
+            />
+          </Stack>
+        </ThemeProvider>
+      </AppProvider>
+    </ProductionErrorBoundary>
   );
 }
 

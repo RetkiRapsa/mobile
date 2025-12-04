@@ -10,13 +10,17 @@ const TOKEN_KEY = 'retkirapsa_jwt_token';
 export async function registerDeviceAndGetToken(): Promise<string> {
   try {
     const deviceId = await getOrCreateUUID();
-    console.log('Registering device with ID:', deviceId);
+    if (__DEV__) {
+      console.log('Registering device with ID:', deviceId);
+    }
 
     const response = await axios.post(`${API_URL}/auth/device`, { deviceId });
     const token = response.data.token;
 
     await SecureStore.setItemAsync(TOKEN_KEY, token);
-    console.log('Device registered, token stored');
+    if (__DEV__) {
+      console.log('Device registered, token stored');
+    }
     return token;
   } catch (error) {
     console.error('Failed to register device:', error);
@@ -26,7 +30,9 @@ export async function registerDeviceAndGetToken(): Promise<string> {
 
 export async function clearToken(): Promise<void> {
   await SecureStore.deleteItemAsync(TOKEN_KEY);
-  console.log('Token cleared from storage');
+  if (__DEV__) {
+    console.log('Token cleared from storage');
+  }
 }
 
 export async function getValidToken(): Promise<string> {
@@ -34,12 +40,16 @@ export async function getValidToken(): Promise<string> {
     let token = await SecureStore.getItemAsync(TOKEN_KEY);
 
     if (!token) {
-      console.log('No token found, registering device...');
+      if (__DEV__) {
+        console.log('No token found, registering device...');
+      }
       token = await registerDeviceAndGetToken();
       return token;
     }
 
-    console.log('Using existing token');
+    if (__DEV__) {
+      console.log('Using existing token');
+    }
     return token;
   } catch (error) {
     console.error('Error in getValidToken:', error);

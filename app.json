@@ -37,7 +37,8 @@
       "edgeToEdgeEnabled": true,
       "usesCleartextTraffic": true,
       "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
-      "package": "com.agasoft.RetkiRapsa"
+      "package": "com.agasoft.RetkiRapsa",
+      "networkSecurityConfig": "./android/app/src/main/res/xml/network_security_config.xml"
     },
     "web": {
       "bundler": "metro",

@@ -80,20 +80,24 @@ export default function CreateNewLocationUpdate({
 
     setLoading(true);
     try {
-      console.log('Creating location update with form:', {
-        locationId: form.locationId,
-        updateText: form.updateText,
-        available: form.available,
-        ticks: form.ticks,
-        device: identity || 'unknown',
-      });
+      if (__DEV__) {
+        console.log('Creating location update with form:', {
+          locationId: form.locationId,
+          updateText: form.updateText,
+          available: form.available,
+          ticks: form.ticks,
+          device: identity || 'unknown',
+        });
+      }
 
       const newUpdate: LocationUpdate = await createLocationUpdate({
         ...form,
         device: identity || 'unknown',
       });
 
-      console.log('Location update created:', newUpdate);
+      if (__DEV__) {
+        console.log('Location update created:', newUpdate);
+      }
 
       if (!newUpdate.id) {
         Alert.alert('Virhe', 'Päivitystä ei voitu tallentaa. Yritä uudelleen.');

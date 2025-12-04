@@ -34,6 +34,7 @@ export default function Map({ location }: MapProps) {
 
   const [locationFound, setLocationFound] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   const [region, setRegion] = useState<Region | null>(
     location
       ? {
@@ -75,14 +76,44 @@ export default function Map({ location }: MapProps) {
 
   useEffect(() => {
     if (!location) return;
+
+    // Don't try to fetch if location is the error state
+    if (
+      location.latitude === ERROR_LOCATION_LATITUDE &&
+      location.longitude === ERROR_LOCATION_LONGITUDE
+    ) {
+      if (__DEV__) {
+        console.log('Skipping location fetch - error state coordinates');
+      }
+      setLoadingError('Sijaintia ei voitu määrittää');
+      setLocationFound(false);
+      return;
+    }
+
     const fetchNearbyLocations = async () => {
-      const nearby = await getNearbyLocationsFromCoords(
-        location.latitude,
-        location.longitude,
-        MAP_SEARCH_RADIUS,
-        MAP_MAX_SPOTS
-      );
-      setVisibleLocations(nearby);
+      try {
+        if (__DEV__) {
+          console.log('Fetching nearby locations for:', location.latitude, location.longitude);
+        }
+        const nearby = await getNearbyLocationsFromCoords(
+          location.latitude,
+          location.longitude,
+          MAP_SEARCH_RADIUS,
+          MAP_MAX_SPOTS
+        );
+        if (__DEV__) {
+          console.log('Fetched nearby locations:', nearby.length);
+        }
+        setVisibleLocations(nearby);
+        setLoadingError(null);
+      } catch (error) {
+        console.error('Failed to fetch nearby locations:', error);
+        setLoadingError('Kohteiden lataus epäonnistui');
+        Alert.alert(
+          'Virhe',
+          'Kohteiden lataus epäonnistui. Tarkista internet-yhteytesi ja yritä uudelleen.'
+        );
+      }
     };
     fetchNearbyLocations();
   }, [location, setVisibleLocations]);
@@ -127,21 +158,27 @@ export default function Map({ location }: MapProps) {
       return;
     }
     setRefreshing(true);
-    lastRefreshTimeRef.current = now;
-    const currentLocation = await getCurrentGpsLocation();
-    if (currentLocation) {
-      const locations = await getNearbyLocationsFromCoords(
-        currentLocation.latitude,
-        currentLocation.longitude,
-        MAP_SEARCH_RADIUS,
-        MAP_MAX_SPOTS
-      );
-      Alert.alert('Päivitetty', `Löydettiin ${locations.length} kohdetta.`);
-      setVisibleLocations(locations);
-    } else {
-      Alert.alert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
+    try {
+      lastRefreshTimeRef.current = now;
+      const currentLocation = await getCurrentGpsLocation();
+      if (currentLocation) {
+        const locations = await getNearbyLocationsFromCoords(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          MAP_SEARCH_RADIUS,
+          MAP_MAX_SPOTS
+        );
+        Alert.alert('Päivitetty', `Löydettiin ${locations.length} kohdetta.`);
+        setVisibleLocations(locations);
+      } else {
+        Alert.alert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
+      }
+    } catch (error) {
+      console.error('Refresh failed:', error);
+      Alert.alert('Virhe', 'Päivitys epäonnistui. Yritä uudelleen.');
+    } finally {
+      setRefreshing(false);
     }
-    setRefreshing(false);
   }, [refreshing, setVisibleLocations]);
 
   // Re-center handler
@@ -159,7 +196,12 @@ export default function Map({ location }: MapProps) {
     return (
       <View style={[styles.container, { backgroundColor: '#000' }]}>
         <View style={styles.centered}>
-          <Text style={styles.loadingText}>Ladataan tietoja...</Text>
+          <Text style={styles.loadingText}>{loadingError || 'Ladataan tietoja...'}</Text>
+          {loadingError && (
+            <Text style={[styles.loadingText, { fontSize: 16, marginTop: 20 }]}>
+              Tarkista laitteen sijaintiasetukset
+            </Text>
+          )}
         </View>
       </View>
     );
