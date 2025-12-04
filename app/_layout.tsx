@@ -38,7 +38,15 @@ type VisibleLocationsContextType = {
   setVisibleLocations: React.Dispatch<React.SetStateAction<Location[]>>;
 };
 
-type AppContextType = SplashInfoContextType & IdentityContextType & VisibleLocationsContextType;
+type SelectedLocationContextType = {
+  selectedLocation: Location | null;
+  setSelectedLocation: React.Dispatch<React.SetStateAction<Location | null>>;
+};
+
+type AppContextType = SplashInfoContextType &
+  IdentityContextType &
+  VisibleLocationsContextType &
+  SelectedLocationContextType;
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -54,6 +62,7 @@ function AppProvider({ children }: { children: React.ReactNode }) {
   const [hasReadSplashInfo, setHasReadSplashInfo] = useState<boolean>(false);
   const [identity, setIdentity] = useState<string | undefined>(undefined);
   const [visibleLocations, setVisibleLocations] = useState<Location[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   useEffect(() => {
     const checkSplashInfo = async () => {
@@ -84,6 +93,8 @@ function AppProvider({ children }: { children: React.ReactNode }) {
         setIdentity,
         visibleLocations,
         setVisibleLocations,
+        selectedLocation,
+        setSelectedLocation,
       }}
     >
       {children}

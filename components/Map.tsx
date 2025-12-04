@@ -54,7 +54,18 @@ export default function Map({ location }: MapProps) {
 
   // Effects
   useEffect(() => {
-    if (!location) return;
+    const timeout = setTimeout(() => {
+      if (!locationFound && location) {
+        Alert.alert('Virhe', 'Sijaintia ei voitu ladata. Yritä uudelleen.');
+        setLocationFound(false);
+      }
+    }, 10000); // 10 second timeout
+
+    if (!location) {
+      clearTimeout(timeout);
+      return;
+    }
+
     if (location.latitude === -1000 && location.longitude === -1000) {
       Alert.alert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
       setLocationFound(false);
@@ -62,7 +73,9 @@ export default function Map({ location }: MapProps) {
       setLocationFound(true);
       resetRegion(location.latitude, location.longitude);
     }
-  }, [location, resetRegion]);
+
+    return () => clearTimeout(timeout);
+  }, [location, locationFound, resetRegion]);
 
   useEffect(() => {
     if (!location) return;
@@ -145,9 +158,9 @@ export default function Map({ location }: MapProps) {
   }, [resetRegion]);
 
   // Render
-  if (!locationFound) {
+  if (!location || !locationFound) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: '#000' }]}>
         <View style={styles.centered}>
           <Text style={styles.loadingText}>Ladataan tietoja...</Text>
         </View>
