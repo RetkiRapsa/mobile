@@ -1,15 +1,65 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 import { clearToken, getValidToken, registerDeviceAndGetToken } from './auth';
 import { devLog, logError } from './logger';
 
 const RETKIRAPSA_API_IP = process.env.EXPO_PUBLIC_RETKIRAPSA_API_IP || 'localhost';
 const API_BASE = `http://${RETKIRAPSA_API_IP}:8080/api/locations`;
+const REQUEST_TIMEOUT = 15000; // 15 seconds
+const MAX_RETRIES = 2;
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
+  timeout: REQUEST_TIMEOUT,
 });
+
+/**
+ * Determine if an error is retryable
+ */
+function isRetryableError(error: AxiosError): boolean {
+  // Network errors or timeouts are retryable
+  if (!error.response) return true;
+
+  // 5xx server errors are retryable
+  if (error.response.status >= 500) return true;
+
+  // 429 (too many requests) is retryable
+  if (error.response.status === 429) return true;
+
+  return false;
+}
+
+/**
+ * Get user-friendly error message
+ */
+function getUserFriendlyError(error: AxiosError): string {
+  if (!error.response) {
+    if (error.code === 'ECONNABORTED') {
+      return 'Pyyntö aikakatkaistiin. Tarkista internet-yhteytesi.';
+    }
+    if (error.message?.includes('Network Error') || error.message?.includes('CLEARTEXT')) {
+      return 'Verkkovirhe. Tarkista internet-yhteytesi ja yritä uudelleen.';
+    }
+    return 'Ei yhteyttä palvelimeen. Tarkista internet-yhteytesi.';
+  }
+
+  const status = error.response.status;
+  if (status >= 500) {
+    return 'Palvelinvirhe. Yritä myöhemmin uudelleen.';
+  }
+  if (status === 404) {
+    return 'Pyydettyä tietoa ei löytynyt.';
+  }
+  if (status === 403) {
+    return 'Ei käyttöoikeutta. Yritä uudelleen.';
+  }
+  if (status === 429) {
+    return 'Liian monta pyyntöä. Odota hetki ja yritä uudelleen.';
+  }
+
+  return 'Tapahtui virhe. Yritä uudelleen.';
+}
 
 // Request interceptor - add auth token for write operations
 api.interceptors.request.use(async (config) => {
@@ -20,18 +70,23 @@ api.interceptors.request.use(async (config) => {
     config.method === 'patch';
 
   if (isWrite) {
-    const token = await getValidToken();
-    config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = await getValidToken();
+      config.headers.Authorization = `Bearer ${token}`;
+    } catch (error) {
+      logError('Failed to get auth token:', error);
+      return Promise.reject(new Error('Autentikointi epäonnistui'));
+    }
   }
 
   return config;
 });
 
-// Response interceptor - handle 403 errors by refreshing token and retrying
+// Response interceptor - handle errors and retry logic
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
 
     // Log network errors for debugging
     if (!error.response) {
@@ -39,14 +94,22 @@ api.interceptors.response.use(
         message: error.message,
         url: originalRequest?.url,
         method: originalRequest?.method,
+        code: error.code,
       });
 
       // Check if it's a cleartext traffic error
       if (error.message?.includes('Network Error') || error.message?.includes('CLEARTEXT')) {
         logError('CLEARTEXT HTTP ERROR: Android may be blocking HTTP traffic');
-        logError('Ensure usesCleartextTraffic is enabled in app.json');
+        logError('Ensure network security config is properly set');
         logError('API URL:', API_BASE);
       }
+    } else {
+      logError('API error:', {
+        status: error.response.status,
+        url: originalRequest?.url,
+        method: originalRequest?.method,
+        data: error.response.data,
+      });
     }
 
     // If we get 403 and haven't already retried
@@ -67,11 +130,29 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         logError('Failed to refresh token:', refreshError);
-        return Promise.reject(refreshError);
+        return Promise.reject(new Error('Autentikointi epäonnistui. Yritä uudelleen.'));
       }
     }
 
-    return Promise.reject(error);
+    // Retry logic for retryable errors
+    const retryCount = originalRequest._retryCount || 0;
+    if (isRetryableError(error) && retryCount < MAX_RETRIES) {
+      originalRequest._retryCount = retryCount + 1;
+      devLog(`Retrying request (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+
+      // Wait before retrying (exponential backoff)
+      const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      return api(originalRequest);
+    }
+
+    // Add user-friendly error message
+    const userMessage = getUserFriendlyError(error);
+    const enhancedError = new Error(userMessage);
+    (enhancedError as any).originalError = error;
+
+    return Promise.reject(enhancedError);
   }
 );
 

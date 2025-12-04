@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
+import { Platform, StyleSheet, Text, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 import { useRouter } from 'expo-router';
 
@@ -8,143 +8,35 @@ import { useAppContext } from '@/app/_layout';
 import ReCenterButton from '@/components/ReCenterButton';
 import RefreshButton from '@/components/RefreshButton';
 import {
+  DEFAULT_LOCATION_LATITUDE,
+  DEFAULT_LOCATION_LONGITUDE,
   ERROR_LOCATION_LATITUDE,
   ERROR_LOCATION_LONGITUDE,
-  MAP_INITIAL_DELTA,
   MAP_MAX_SPOTS,
   MAP_REFRESH_COOLDOWN_MS,
   MAP_SEARCH_RADIUS,
 } from '@/constants/Location';
-import Location from '@/types/Location';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
 import { devLog, logError } from '@/utils/logger';
 import { getIconName } from '@/utils/map';
 import { safeAlert } from '@/utils/safeAlert';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface MapProps {
   location: { latitude: number; longitude: number } | null;
   usingDefaultLocation?: boolean;
 }
 
+// Lazy load web map component
+const LeafletMapWeb = Platform.OS === 'web' ? React.lazy(() => import('./Map.web')) : null;
+
 export default function Map({ location, usingDefaultLocation = false }: MapProps) {
-  // Hooks
-  const mapRef = useRef<MapView | null>(null);
-  const lastRefreshTimeRef = useRef<number>(0);
   const router = useRouter();
   const { visibleLocations, setVisibleLocations, setSelectedLocation } = useAppContext();
-
-  const [locationFound, setLocationFound] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [loadingError, setLoadingError] = useState<string | null>(null);
-  const [region, setRegion] = useState<Region | null>(
-    location
-      ? {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          latitudeDelta: MAP_INITIAL_DELTA,
-          longitudeDelta: MAP_INITIAL_DELTA,
-        }
-      : null
-  );
+  const lastRefreshTimeRef = useRef<number>(0);
 
-  // Helpers
-  const resetRegion = useCallback((latitude: number, longitude: number) => {
-    setRegion({
-      latitude,
-      longitude,
-      latitudeDelta: MAP_INITIAL_DELTA,
-      longitudeDelta: MAP_INITIAL_DELTA,
-    });
-  }, []);
-
-  // Effects
-  useEffect(() => {
-    if (!location) {
-      return;
-    }
-
-    if (
-      location.latitude === ERROR_LOCATION_LATITUDE &&
-      location.longitude === ERROR_LOCATION_LONGITUDE
-    ) {
-      // Don't show Alert in production - it can cause crashes
-      devLog('Skipping location fetch - error state coordinates');
-      setLoadingError('Sijaintia ei voitu paikallistaa');
-      setLocationFound(false);
-    } else {
-      setLocationFound(true);
-      setLoadingError(null);
-      resetRegion(location.latitude, location.longitude);
-    }
-  }, [location, resetRegion]);
-
-  useEffect(() => {
-    if (!location) return;
-
-    // Don't try to fetch if location is the error state (but DO fetch if it's the default Helsinki location)
-    if (
-      location.latitude === ERROR_LOCATION_LATITUDE &&
-      location.longitude === ERROR_LOCATION_LONGITUDE
-    ) {
-      devLog('Skipping location fetch - error state coordinates');
-      setLoadingError('Sijaintia ei voitu määrittää');
-      setLocationFound(false);
-      return;
-    }
-
-    const fetchNearbyLocations = async () => {
-      try {
-        devLog('Fetching nearby locations for:', location.latitude, location.longitude);
-        const nearby = await getNearbyLocationsFromCoords(
-          location.latitude,
-          location.longitude,
-          MAP_SEARCH_RADIUS,
-          MAP_MAX_SPOTS
-        );
-        devLog('Fetched nearby locations:', nearby.length);
-        setVisibleLocations(nearby);
-        setLoadingError(null);
-      } catch (error) {
-        logError('Failed to fetch nearby locations:', error);
-        setLoadingError('Kohteiden lataus epäonnistui');
-        // Don't show alerts in production - can cause crashes
-        devLog('API error - not showing alert in production');
-      }
-    };
-    fetchNearbyLocations();
-  }, [location, setVisibleLocations]);
-
-  // Marker rendering
-  const renderMarkers = useMemo(
-    () =>
-      visibleLocations.map((location: Location) => (
-        <Marker
-          key={location.id}
-          coordinate={{ latitude: location.latitude, longitude: location.longitude }}
-          onPress={() => {
-            setSelectedLocation(location);
-            router.push('/locationDetails');
-          }}
-        >
-          <MaterialCommunityIcons
-            style={{
-              borderWidth: 2,
-              borderColor: location.ticks ? 'red' : 'green',
-              borderRadius: 8,
-              backgroundColor: 'lightblue',
-            }}
-            name={getIconName(location.type!)}
-            size={30}
-            color={location.available ? 'black' : 'red'}
-          />
-        </Marker>
-      )),
-    [visibleLocations, setSelectedLocation, router]
-  );
-
-  // Refresh handler
+  // Refresh handler (works for both web and mobile)
   const handleRefresh = useCallback(async () => {
     if (refreshing) return;
     const now = Date.now();
@@ -172,22 +64,433 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
         safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
       }
     } catch (error) {
-      console.error('Refresh failed:', error);
+      logError('Refresh failed:', error);
       safeAlert('Virhe', 'Päivitys epäonnistui. Yritä uudelleen.');
     } finally {
       setRefreshing(false);
     }
   }, [refreshing, setVisibleLocations]);
 
+  // Re-center handler (works for both web and mobile)
+  const handleRecenter = useCallback(async () => {
+    const currentLocation = await getCurrentGpsLocation();
+    if (currentLocation) {
+      try {
+        const locations = await getNearbyLocationsFromCoords(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          MAP_SEARCH_RADIUS,
+          MAP_MAX_SPOTS
+        );
+        setVisibleLocations(locations);
+      } catch (error) {
+        logError('Failed to fetch locations after re-center:', error);
+      }
+    } else {
+      safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
+    }
+  }, [setVisibleLocations]);
+
+  // If on web platform, use React Leaflet directly
+  if (Platform.OS === 'web' && LeafletMapWeb) {
+    return (
+      <>
+        <React.Suspense
+          fallback={
+            <View style={styles.container}>
+              <Text>Loading map...</Text>
+            </View>
+          }
+        >
+          <LeafletMapWeb
+            location={location}
+            visibleLocations={visibleLocations}
+            onMarkerClick={(loc) => {
+              setSelectedLocation(loc);
+              router.push('/locationDetails');
+            }}
+          />
+        </React.Suspense>
+
+        {/* Show notification if using default location */}
+        {usingDefaultLocation && (
+          <View style={styles.locationWarningBanner}>
+            <Text style={styles.locationWarningText}>⚠️ Sijaintiasi ei voitu määrittää</Text>
+            <Text style={styles.locationWarningSubtext}>Näytetään Helsinki-alueen kohteita</Text>
+          </View>
+        )}
+
+        <RefreshButton onPress={handleRefresh} />
+        <ReCenterButton onPress={handleRecenter} />
+      </>
+    );
+  }
+
+  // For mobile platforms (iOS/Android), use WebView
+  return <MobileMapView location={location} usingDefaultLocation={usingDefaultLocation} />;
+}
+
+// Mobile map component using WebView
+function MobileMapView({ location, usingDefaultLocation = false }: MapProps) {
+  // Hooks
+  const webViewRef = useRef<WebView | null>(null);
+  const lastRefreshTimeRef = useRef<number>(0);
+  const router = useRouter();
+  const { visibleLocations, setVisibleLocations, setSelectedLocation } = useAppContext();
+
+  const [locationFound, setLocationFound] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Helpers
+  const sendMessageToMap = useCallback(
+    (message: any) => {
+      if (webViewRef.current && mapLoaded) {
+        devLog('Sending message to map:', message.type, message);
+        // Use injectJavaScript for better Android compatibility
+        const jsCode = `
+          (function() {
+            try {
+              if (window.handleReactNativeMessage) {
+                window.handleReactNativeMessage(${JSON.stringify(message)});
+              } else {
+                console.log('handleReactNativeMessage not ready, queuing...');
+              }
+            } catch (e) {
+              console.error('Error in injected JS:', e);
+            }
+          })();
+          true; // Required for Android
+        `;
+        webViewRef.current.injectJavaScript(jsCode);
+      } else {
+        devLog('Map not ready, queuing message:', message.type);
+        // Retry after a short delay if map isn't loaded yet
+        setTimeout(() => {
+          if (webViewRef.current && mapLoaded) {
+            devLog('Retrying message to map:', message.type);
+            const jsCode = `
+              (function() {
+                try {
+                  if (window.handleReactNativeMessage) {
+                    window.handleReactNativeMessage(${JSON.stringify(message)});
+                  }
+                } catch (e) {
+                  console.error('Error in retry injected JS:', e);
+                }
+              })();
+              true;
+            `;
+            webViewRef.current.injectJavaScript(jsCode);
+          }
+        }, 500);
+      }
+    },
+    [mapLoaded]
+  );
+
+  const resetRegion = useCallback(
+    (latitude: number, longitude: number) => {
+      sendMessageToMap({
+        type: 'setCenter',
+        latitude,
+        longitude,
+        zoom: 16, // Zoom 16 ≈ 200m radius view
+      });
+    },
+    [sendMessageToMap]
+  );
+
+  // Effects
+  useEffect(() => {
+    if (!location) {
+      return;
+    }
+
+    if (
+      location.latitude === ERROR_LOCATION_LATITUDE &&
+      location.longitude === ERROR_LOCATION_LONGITUDE
+    ) {
+      devLog('Skipping location fetch - error state coordinates');
+      setLoadingError('Sijaintia ei voitu paikallistaa');
+      setLocationFound(false);
+    } else {
+      setLocationFound(true);
+      setLoadingError(null);
+      resetRegion(location.latitude, location.longitude);
+    }
+  }, [location, resetRegion]);
+
+  useEffect(() => {
+    if (!location) return;
+
+    // Don't try to fetch if location is the error state
+    if (
+      location.latitude === ERROR_LOCATION_LATITUDE &&
+      location.longitude === ERROR_LOCATION_LONGITUDE
+    ) {
+      devLog('Skipping location fetch - error state coordinates');
+      setLoadingError('Sijaintia ei voitu määrittää');
+      setLocationFound(false);
+      return;
+    }
+
+    const fetchNearbyLocations = async () => {
+      try {
+        devLog('Fetching nearby locations for:', location.latitude, location.longitude);
+        const nearby = await getNearbyLocationsFromCoords(
+          location.latitude,
+          location.longitude,
+          MAP_SEARCH_RADIUS,
+          MAP_MAX_SPOTS
+        );
+        devLog('Fetched nearby locations:', nearby.length);
+        setVisibleLocations(nearby);
+        setLoadingError(null);
+      } catch (error) {
+        logError('Failed to fetch nearby locations:', error);
+        setLoadingError('Kohteiden lataus epäonnistui');
+        devLog('API error - not showing alert in production');
+      }
+    };
+    fetchNearbyLocations();
+  }, [location, setVisibleLocations]);
+
+  // Update markers when locations change
+  useEffect(() => {
+    if (mapLoaded && visibleLocations.length > 0) {
+      sendMessageToMap({
+        type: 'updateMarkers',
+        markers: visibleLocations.map((loc) => ({
+          id: loc.id,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          icon: getIconName(loc.type!),
+          available: loc.available,
+          ticks: loc.ticks,
+          name: loc.name,
+        })),
+      });
+    }
+  }, [visibleLocations, mapLoaded, sendMessageToMap]);
+
+  // Handle messages from WebView
+  const handleWebViewMessage = useCallback(
+    (event: any) => {
+      try {
+        const message = JSON.parse(event.nativeEvent.data);
+
+        if (message.type === 'mapReady') {
+          setMapLoaded(true);
+          devLog('Map loaded and ready');
+        } else if (message.type === 'markerClick') {
+          const locationData = visibleLocations.find((loc) => loc.id === message.id);
+          if (locationData) {
+            setSelectedLocation(locationData);
+            router.push('/locationDetails');
+          }
+        }
+      } catch (error) {
+        logError('Error handling WebView message:', error);
+      }
+    },
+    [visibleLocations, setSelectedLocation, router]
+  );
+
+  // Refresh handler
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return;
+    const now = Date.now();
+    if (now - lastRefreshTimeRef.current < MAP_REFRESH_COOLDOWN_MS) {
+      safeAlert(
+        'Huomio',
+        'Et voi päivittää karttaa näin usein. Odota hetki ennen kuin päivität uudelleen.'
+      );
+      return;
+    }
+    setRefreshing(true);
+    try {
+      lastRefreshTimeRef.current = now;
+      const currentLocation = await getCurrentGpsLocation();
+      if (currentLocation) {
+        // Re-center map to current location
+        resetRegion(currentLocation.latitude, currentLocation.longitude);
+
+        // Fetch nearby locations
+        const locations = await getNearbyLocationsFromCoords(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          MAP_SEARCH_RADIUS,
+          MAP_MAX_SPOTS
+        );
+        safeAlert('Päivitetty', `Löydettiin ${locations.length} kohdetta.`);
+        setVisibleLocations(locations);
+      } else {
+        safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
+      }
+    } catch (error) {
+      logError('Refresh failed:', error);
+      safeAlert('Virhe', 'Päivitys epäonnistui. Yritä uudelleen.');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing, setVisibleLocations, resetRegion]);
+
   // Re-center handler
   const handleRecenter = useCallback(async () => {
     const currentLocation = await getCurrentGpsLocation();
     if (currentLocation) {
       resetRegion(currentLocation.latitude, currentLocation.longitude);
+
+      // Also fetch and update nearby locations for the new center
+      try {
+        const locations = await getNearbyLocationsFromCoords(
+          currentLocation.latitude,
+          currentLocation.longitude,
+          MAP_SEARCH_RADIUS,
+          MAP_MAX_SPOTS
+        );
+        setVisibleLocations(locations);
+      } catch (error) {
+        logError('Failed to fetch locations after re-center:', error);
+      }
     } else {
       safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
     }
-  }, [resetRegion]);
+  }, [resetRegion, setVisibleLocations]);
+
+  // Generate HTML for WebView with Leaflet map
+  const htmlContent = useMemo(() => {
+    const initialLat = location?.latitude || DEFAULT_LOCATION_LATITUDE;
+    const initialLon = location?.longitude || DEFAULT_LOCATION_LONGITUDE;
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" />
+          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <style>
+            body, html { margin: 0; padding: 0; height: 100%; width: 100%; }
+            #map { height: 100%; width: 100%; }
+            .custom-marker {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 8px;
+              background-color: lightblue;
+            }
+            .custom-marker i {
+              font-size: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script>
+            // Initialize map
+            const map = L.map('map', {
+              center: [${initialLat}, ${initialLon}],
+              zoom: 16, // Zoom 16 ≈ 200m radius view
+              zoomControl: true,
+            });
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap contributors',
+              maxZoom: 19,
+            }).addTo(map);
+
+            // Store markers
+            const markers = {};
+
+            // Icon mapping to MaterialDesignIcons (matches MaterialCommunityIcons)
+            const iconMap = {
+              'tent': 'mdi-tent',
+              'campfire': 'mdi-campfire',
+              'waves': 'mdi-waves',
+              'bridge': 'mdi-bridge',
+              'chevron-up-box-outline': 'mdi-chevron-up-box-outline',
+              'toilet': 'mdi-toilet',
+              'parking': 'mdi-parking',
+              'map-marker-question': 'mdi-map-marker-question',
+            };
+
+            // Create custom icon with MaterialDesignIcons
+            function createCustomIcon(iconName, available, ticks) {
+              const mdiClass = iconMap[iconName] || iconMap['map-marker-question'];
+              const borderColor = ticks ? 'red' : 'green';
+              const bgColor = 'lightblue';
+              const iconColor = available ? 'black' : 'red';
+              
+              return L.divIcon({
+                html: \`<div class="custom-marker" style="
+                  border: 2px solid \${borderColor};
+                  width: 34px;
+                  height: 34px;
+                ">
+                  <i class="mdi \${mdiClass}" style="color: \${iconColor};"></i>
+                </div>\`,
+                className: '',
+                iconSize: [34, 34],
+                iconAnchor: [17, 17],
+              });
+            }
+
+            // Handle messages from React Native via injectJavaScript
+            window.handleReactNativeMessage = function(message) {
+              try {
+                console.log('Leaflet received message:', message.type);
+                
+                if (message.type === 'setCenter') {
+                  console.log('Setting map center to:', message.latitude, message.longitude, 'zoom:', message.zoom);
+                  // Use flyTo for smooth animation
+                  map.flyTo([message.latitude, message.longitude], message.zoom || 16, {
+                    duration: 1.5 // 1.5 second animation
+                  });
+                } else if (message.type === 'updateMarkers') {
+                  console.log('Updating markers, count:', message.markers.length);
+                  // Clear existing markers
+                  Object.values(markers).forEach(marker => marker.remove());
+                  
+                  // Add new markers
+                  message.markers.forEach(markerData => {
+                    const marker = L.marker(
+                      [markerData.latitude, markerData.longitude],
+                      { icon: createCustomIcon(markerData.icon, markerData.available, markerData.ticks) }
+                    ).addTo(map);
+                    
+                    marker.on('click', () => {
+                      console.log('Marker clicked:', markerData.id);
+                      window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'markerClick',
+                        id: markerData.id,
+                      }));
+                    });
+                    
+                    markers[markerData.id] = marker;
+                  });
+                  console.log('Markers updated successfully');
+                }
+              } catch (error) {
+                console.error('Error handling message:', error);
+              }
+            };
+
+            // Notify React Native that map is ready
+            setTimeout(() => {
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'mapReady',
+              }));
+            }, 500);
+          </script>
+        </body>
+      </html>
+    `;
+  }, [location]);
 
   // Render
   if (!location || !locationFound) {
@@ -207,17 +510,16 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
 
   return (
     <>
-      <MapView
-        ref={mapRef}
+      <WebView
+        ref={webViewRef}
+        source={{ html: htmlContent }}
         style={styles.map}
-        zoomEnabled
-        scrollEnabled
-        showsUserLocation
-        region={region || undefined}
-        onRegionChangeComplete={setRegion}
-      >
-        {renderMarkers}
-      </MapView>
+        onMessage={handleWebViewMessage}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        startInLoadingState={true}
+        scalesPageToFit={false}
+      />
 
       {/* Show notification if using default location */}
       {usingDefaultLocation && (
