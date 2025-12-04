@@ -36,6 +36,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
 
   const [locationFound, setLocationFound] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [recentering, setRecentering] = useState(false); // New state for re-center loading
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
@@ -235,6 +236,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
 
   // Re-center handler
   const handleRecenter = useCallback(async () => {
+    setRecentering(true); // Start loading state
     const currentLocation = await getCurrentGpsLocation();
     if (currentLocation) {
       resetRegion(currentLocation.latitude, currentLocation.longitude);
@@ -254,6 +256,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     } else {
       safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
     }
+    setRecentering(false); // End loading state
   }, [resetRegion, setVisibleLocations]);
 
   // Generate HTML for WebView with Leaflet map
@@ -425,8 +428,8 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
         </View>
       )}
 
-      <RefreshButton onPress={handleRefresh} />
-      <ReCenterButton onPress={handleRecenter} />
+      <RefreshButton onPress={handleRefresh} loading={refreshing} />
+      <ReCenterButton onPress={handleRecenter} loading={recentering} />
     </>
   );
 }
