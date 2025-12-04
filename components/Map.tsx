@@ -7,6 +7,14 @@ import { useRouter } from 'expo-router';
 import { useAppContext } from '@/app/_layout';
 import ReCenterButton from '@/components/ReCenterButton';
 import RefreshButton from '@/components/RefreshButton';
+import {
+  ERROR_LOCATION_LATITUDE,
+  ERROR_LOCATION_LONGITUDE,
+  MAP_INITIAL_DELTA,
+  MAP_MAX_SPOTS,
+  MAP_REFRESH_COOLDOWN_MS,
+  MAP_SEARCH_RADIUS,
+} from '@/constants/Location';
 import Location from '@/types/Location';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
@@ -17,14 +25,10 @@ interface MapProps {
   location: { latitude: number; longitude: number } | null;
 }
 
-const INITIAL_DELTA = 0.01;
-const REFRESH_COOLDOWN_MS = 15000;
-const SEARCH_RADIUS = 1000 * 1000;
-const MAX_SPOTS = 50;
-
 export default function Map({ location }: MapProps) {
   // Hooks
   const mapRef = useRef<MapView | null>(null);
+  const lastRefreshTimeRef = useRef<number>(0);
   const router = useRouter();
   const { visibleLocations, setVisibleLocations, setSelectedLocation } = useAppContext();
 
@@ -35,8 +39,8 @@ export default function Map({ location }: MapProps) {
       ? {
           latitude: location.latitude,
           longitude: location.longitude,
-          latitudeDelta: INITIAL_DELTA,
-          longitudeDelta: INITIAL_DELTA,
+          latitudeDelta: MAP_INITIAL_DELTA,
+          longitudeDelta: MAP_INITIAL_DELTA,
         }
       : null
   );
@@ -46,35 +50,28 @@ export default function Map({ location }: MapProps) {
     setRegion({
       latitude,
       longitude,
-      latitudeDelta: INITIAL_DELTA,
-      longitudeDelta: INITIAL_DELTA,
+      latitudeDelta: MAP_INITIAL_DELTA,
+      longitudeDelta: MAP_INITIAL_DELTA,
     });
   }, []);
 
   // Effects
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!locationFound && location) {
-        Alert.alert('Virhe', 'Sijaintia ei voitu ladata. Yritä uudelleen.');
-        setLocationFound(false);
-      }
-    }, 10000); // 10 second timeout
-
     if (!location) {
-      clearTimeout(timeout);
       return;
     }
 
-    if (location.latitude === -1000 && location.longitude === -1000) {
+    if (
+      location.latitude === ERROR_LOCATION_LATITUDE &&
+      location.longitude === ERROR_LOCATION_LONGITUDE
+    ) {
       Alert.alert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
       setLocationFound(false);
     } else {
       setLocationFound(true);
       resetRegion(location.latitude, location.longitude);
     }
-
-    return () => clearTimeout(timeout);
-  }, [location, locationFound, resetRegion]);
+  }, [location, resetRegion]);
 
   useEffect(() => {
     if (!location) return;
@@ -82,8 +79,8 @@ export default function Map({ location }: MapProps) {
       const nearby = await getNearbyLocationsFromCoords(
         location.latitude,
         location.longitude,
-        SEARCH_RADIUS,
-        MAX_SPOTS
+        MAP_SEARCH_RADIUS,
+        MAP_MAX_SPOTS
       );
       setVisibleLocations(nearby);
     };
@@ -115,15 +112,14 @@ export default function Map({ location }: MapProps) {
           />
         </Marker>
       )),
-    [visibleLocations, router, setSelectedLocation]
+    [visibleLocations, setSelectedLocation, router]
   );
 
   // Refresh handler
   const handleRefresh = useCallback(async () => {
     if (refreshing) return;
-    const lastRefresh = (global as any).lastRefreshTime || 0;
     const now = Date.now();
-    if (now - lastRefresh < REFRESH_COOLDOWN_MS) {
+    if (now - lastRefreshTimeRef.current < MAP_REFRESH_COOLDOWN_MS) {
       Alert.alert(
         'Huomio',
         'Et voi päivittää karttaa näin usein. Odota hetki ennen kuin päivität uudelleen.'
@@ -131,14 +127,14 @@ export default function Map({ location }: MapProps) {
       return;
     }
     setRefreshing(true);
-    (global as any).lastRefreshTime = now;
+    lastRefreshTimeRef.current = now;
     const currentLocation = await getCurrentGpsLocation();
     if (currentLocation) {
       const locations = await getNearbyLocationsFromCoords(
         currentLocation.latitude,
         currentLocation.longitude,
-        SEARCH_RADIUS,
-        MAX_SPOTS
+        MAP_SEARCH_RADIUS,
+        MAP_MAX_SPOTS
       );
       Alert.alert('Päivitetty', `Löydettiin ${locations.length} kohdetta.`);
       setVisibleLocations(locations);
@@ -173,7 +169,6 @@ export default function Map({ location }: MapProps) {
     <>
       <MapView
         ref={mapRef}
-        key={visibleLocations.length}
         style={styles.map}
         zoomEnabled
         scrollEnabled

@@ -5,6 +5,7 @@ import InfoScreen from '@/app/(tabs)/info';
 import { useAppContext } from '@/app/_layout';
 import Map from '@/components/Map';
 import { View } from '@/components/Themed';
+import { ERROR_LOCATION_LATITUDE, ERROR_LOCATION_LONGITUDE } from '@/constants/Location';
 import { getCurrentGpsLocation } from '@/utils/gps';
 import { setSplashInfoSeen } from '@/utils/splashInfo';
 
@@ -18,7 +19,7 @@ export default function MapScreen() {
       if (currentLocation) {
         setLocation(currentLocation);
       } else {
-        setLocation({ latitude: -1000, longitude: -1000 });
+        setLocation({ latitude: ERROR_LOCATION_LATITUDE, longitude: ERROR_LOCATION_LONGITUDE });
       }
     })();
   }, []);
@@ -26,24 +27,20 @@ export default function MapScreen() {
   if (!hasReadSplashInfo) {
     return (
       <View style={styles.container}>
-        <>
-          <InfoScreen
-            onAcknowledge={() => {
-              setHasReadSplashInfo(true);
-              setSplashInfoSeen();
-            }}
-            showButton={true}
-          />
-        </>
+        <InfoScreen
+          onAcknowledge={() => {
+            setHasReadSplashInfo(true);
+            setSplashInfoSeen();
+          }}
+          showButton={true}
+        />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <>
-        <Map location={location} />
-      </>
+      <Map location={location} />
     </View>
   );
 }

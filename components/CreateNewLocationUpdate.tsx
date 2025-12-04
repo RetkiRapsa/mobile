@@ -6,6 +6,7 @@ import { Alert, Animated, StyleSheet, Switch, TextInput, TouchableOpacity, useCo
 import { useAppContext } from '@/app/_layout';
 import { Text, View } from '@/components/Themed';
 import colors from '@/constants/Colors';
+import { MAP_MAX_SPOTS, MAP_SEARCH_RADIUS } from '@/constants/Location';
 import Location from '@/types/Location';
 import LocationUpdate from '@/types/LocationUpdate';
 import { createLocationUpdate } from '@/utils/createLocationUpdate';
@@ -44,7 +45,7 @@ export default function CreateNewLocationUpdate({
   handleClose,
   handleSavedUpdate,
 }: CreateNewLocationUpdateProps) {
-  const { identity, setVisibleLocations, visibleLocations } = useAppContext();
+  const { identity, setVisibleLocations } = useAppContext();
   const colorScheme = useColorScheme();
   const theme = useMemo(() => getTheme(colorScheme), [colorScheme]);
 
@@ -56,7 +57,7 @@ export default function CreateNewLocationUpdate({
       available: available,
       device: identity ?? '',
     }),
-    [location, identity]
+    [location.id, identity, ticks, available]
   );
 
   const [form, setForm] = useState<FormState>(defaultForm);
@@ -76,37 +77,75 @@ export default function CreateNewLocationUpdate({
       Alert.alert('Huomio', 'Päivitysteksti on pakollinen.');
       return;
     }
+
     setLoading(true);
     try {
+      console.log('Creating location update with form:', {
+        locationId: form.locationId,
+        updateText: form.updateText,
+        available: form.available,
+        ticks: form.ticks,
+        device: identity || 'unknown',
+      });
+
       const newUpdate: LocationUpdate = await createLocationUpdate({
         ...form,
         device: identity || 'unknown',
       });
 
-      if (newUpdate.id) {
-        const INITIAL_DELTA = 0.01;
-        const REFRESH_COOLDOWN_MS = 15000;
-        const SEARCH_RADIUS = 1000 * 1000;
-        const MAX_SPOTS = 50;
+      console.log('Location update created:', newUpdate);
 
-        await getNearbyLocationsFromCoords(
-          location.latitude,
-          location.longitude,
-          SEARCH_RADIUS,
-          MAX_SPOTS
-        ).then((nearby) => {
-          setVisibleLocations(nearby);
-          setForm(defaultForm);
-          Alert.alert('Päivityksesi on nyt lisätty kohteeseen.');
-          handleSavedUpdate(form.available, form.ticks);
-          handleClose();
-        });
+      if (!newUpdate.id) {
+        Alert.alert('Virhe', 'Päivitystä ei voitu tallentaa. Yritä uudelleen.');
+        setLoading(false);
+        return;
       }
-    } catch {
-      Alert.alert('Virhe', 'Päivitystäsi ei voitu lisätä kohteeseen. Kokeile uudelleen myöhemmin.');
+
+      // Refresh nearby locations
+      const nearby = await getNearbyLocationsFromCoords(
+        location.latitude,
+        location.longitude,
+        MAP_SEARCH_RADIUS,
+        MAP_MAX_SPOTS
+      );
+
+      setVisibleLocations(nearby);
+      setForm(defaultForm);
+      Alert.alert('Onnistui!', 'Päivityksesi on nyt lisätty kohteeseen.');
+      handleSavedUpdate(form.available, form.ticks);
+      handleClose();
+    } catch (error) {
+      console.error('Failed to create location update:', error);
+
+      // Better error messages based on error type
+      let errorMessage = 'Päivitystäsi ei voitu lisätä kohteeseen. Kokeile uudelleen myöhemmin.';
+
+      if (error && typeof error === 'object') {
+        const err = error as any;
+        if (err.response) {
+          // Server responded with error
+          console.error('Server error response:', err.response.data);
+          console.error('Status:', err.response.status);
+
+          if (err.response.status === 401 || err.response.status === 403) {
+            errorMessage = 'Autentikointi epäonnistui. Yritä sulkea ja avata sovellus uudelleen.';
+          } else if (err.response.status >= 500) {
+            errorMessage = 'Palvelinvirhe. Yritä myöhemmin uudelleen.';
+          }
+        } else if (err.request) {
+          // Request made but no response
+          console.error('No response received:', err.request);
+          errorMessage = 'Ei yhteyttä palvelimeen. Tarkista internetyhteytesi.';
+        } else if (err.message) {
+          console.error('Error message:', err.message);
+        }
+      }
+
+      Alert.alert('Virhe', errorMessage);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [form, identity, defaultForm]);
+  }, [form, identity, location, defaultForm, setVisibleLocations, handleSavedUpdate, handleClose]);
 
   if (!location) {
     return (

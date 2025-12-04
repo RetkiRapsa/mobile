@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View, } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from 'react-native';
 
 import * as Clipboard from 'expo-clipboard';
 
@@ -10,51 +18,9 @@ import LocationUpdate from '@/types/LocationUpdate';
 import getLocationUpdates from '@/utils/getLocationUpdates';
 import { isTooFarFromLocation } from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
+import { getIconName } from '@/utils/map';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-
-enum LocationTypeEnum {
-  CAMPING_AREA = 'CAMPING_AREA',
-  FIREPLACE = 'FIREPLACE',
-  LAAVU = 'LAAVU',
-  TOILET = 'TOILET',
-  BEACH = 'BEACH',
-  BRIDGE = 'BRIDGE',
-  PARKING = 'PARKING',
-  OTHER = 'OTHER',
-}
-
-export function getIconName(
-  type: string
-):
-  | 'tent'
-  | 'campfire'
-  | 'waves'
-  | 'bridge'
-  | 'chevron-up-box-outline'
-  | 'toilet'
-  | 'parking'
-  | 'map-marker-question' {
-  switch (type) {
-    case LocationTypeEnum.CAMPING_AREA:
-      return 'tent';
-    case LocationTypeEnum.FIREPLACE:
-      return 'campfire';
-    case LocationTypeEnum.BEACH:
-      return 'waves';
-    case LocationTypeEnum.BRIDGE:
-      return 'bridge';
-    case LocationTypeEnum.LAAVU:
-      return 'chevron-up-box-outline';
-    case LocationTypeEnum.TOILET:
-      return 'toilet';
-    case LocationTypeEnum.PARKING:
-      return 'parking';
-    case LocationTypeEnum.OTHER:
-    default:
-      return 'map-marker-question';
-  }
-}
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
@@ -75,7 +41,74 @@ export default function LocationDetailsScreen() {
   const [updatedTicks, setUpdatedTicks] = useState(false);
   const [lastUpdateCreatedAt, setLastUpdateCreatedAt] = useState<string | undefined>(undefined);
   const [isTooFar, setIsTooFar] = useState(false);
-  const { selectedLocation, identity, setVisibleLocations, visibleLocations } = useAppContext();
+  const { selectedLocation, setSelectedLocation, identity, setVisibleLocations, visibleLocations } =
+    useAppContext();
+
+  const location = selectedLocation;
+
+  const copyToClipboard = async (text: string) => {
+    await Clipboard.setStringAsync(text);
+  };
+
+  useEffect(() => {
+    if (!location) return;
+
+    const checkDistance = async () => {
+      const locationFromGPS = await getCurrentGpsLocation();
+      if (!locationFromGPS) {
+        return;
+      }
+
+      const tooFar = await isTooFarFromLocation(
+        location,
+        locationFromGPS.latitude,
+        locationFromGPS.longitude
+      );
+      setIsTooFar(tooFar);
+    };
+
+    checkDistance();
+  }, [location]);
+
+  useEffect(() => {
+    if (!location?.id) return;
+
+    const fetchUpdates = async () => {
+      try {
+        const updates = await getLocationUpdates(location.id, 20);
+        setLocationUpdates(
+          updates.map(
+            (update: {
+              id: string;
+              locationId: string;
+              updateText: string;
+              device: string;
+              created: string;
+            }) => {
+              const createdAt = new Date(update.created).toLocaleString('fi-FI');
+              return {
+                id: update.id,
+                locationId: update.locationId,
+                updateText: update.updateText,
+                device: update.device,
+                created: createdAt,
+              };
+            }
+          )
+        );
+      } catch (error) {
+        console.error('Failed to fetch location updates:', error);
+      }
+    };
+    fetchUpdates();
+  }, [location?.id, lastUpdateCreatedAt]);
+
+  useEffect(() => {
+    if (location) {
+      setUpdatedAvailable(location.available);
+      setUpdatedTicks(location.ticks);
+    }
+  }, [location?.id, location?.available, location?.ticks]);
 
   // If no location is selected, show error
   if (!selectedLocation) {
@@ -86,57 +119,10 @@ export default function LocationDetailsScreen() {
     );
   }
 
-  const location = selectedLocation;
-
-  const copyToClipboard = async (text: string) => {
-    await Clipboard.setStringAsync(text);
-  };
-
-  useEffect(() => {
-    const checkDistance = async () => {
-      const locationFromGPS = await getCurrentGpsLocation();
-      if (
-        await isTooFarFromLocation(location, locationFromGPS!.latitude, locationFromGPS!.longitude)
-      ) {
-        setIsTooFar(true);
-      } else {
-        setIsTooFar(false);
-      }
-    };
-
-    checkDistance();
-  }, [location]);
-
-  useEffect(() => {
-    const fetchUpdates = async () => {
-      const updates = await getLocationUpdates(location?.id, 20);
-      setLocationUpdates(
-        updates.map((update: any) => {
-          const createdAt = new Date(update.created).toLocaleString('fi-FI');
-          return {
-            id: update.id,
-            locationId: update.locationId,
-            updateText: update.updateText,
-            device: update.device,
-            created: createdAt,
-          };
-        })
-      );
-    };
-    fetchUpdates();
-  }, [location.id, lastUpdateCreatedAt]);
-
-  useEffect(() => {
-    if (location) {
-      setUpdatedAvailable(location.available);
-      setUpdatedTicks(location.ticks);
-    }
-  }, [location.id]);
-
   if (addLocationUpdate) {
     return (
       <CreateNewLocationUpdate
-        location={location}
+        location={selectedLocation}
         available={updatedAvailable}
         ticks={updatedTicks}
         handleClose={() => setAddLocationUpdate(false)}
@@ -144,6 +130,15 @@ export default function LocationDetailsScreen() {
           setUpdatedAvailable(available);
           setUpdatedTicks(ticks);
           setLastUpdateCreatedAt(new Date().toLocaleString('fi-FI'));
+
+          // Update the location in context to sync with map markers
+          const updatedLocations = visibleLocations.map((loc) =>
+            loc.id === selectedLocation.id ? { ...loc, available, ticks } : loc
+          );
+          setVisibleLocations(updatedLocations);
+
+          // Update selectedLocation as well
+          setSelectedLocation({ ...selectedLocation, available, ticks });
         }}
       />
     );
@@ -157,7 +152,7 @@ export default function LocationDetailsScreen() {
           <View style={styles.content}>
             <MaterialCommunityIcons
               style={{ marginBottom: 10 }}
-              name={getIconName(location.type!)}
+              name={getIconName(selectedLocation.type!)}
               size={52}
               color={foregroundColor}
             />
@@ -165,10 +160,10 @@ export default function LocationDetailsScreen() {
               style={[styles.title, { color: foregroundColor }]}
               onPress={() => {
                 Alert.alert('Kohteen koordinaatit kopioitu leikepöydälle');
-                copyToClipboard(location.latitude + ', ' + location.longitude);
+                copyToClipboard(selectedLocation.latitude + ', ' + selectedLocation.longitude);
               }}
             >
-              {location.name}
+              {selectedLocation.name}
             </Text>
             <Text style={[styles.statusText, { color: foregroundColor }]}>
               Käytössä: {updatedAvailable ? 'Kyllä' : 'Ei'}
@@ -209,13 +204,10 @@ export default function LocationDetailsScreen() {
               { backgroundColor: footerBackgroundColor, borderColor: footerBorderColor },
             ]}
           >
-            <TouchableOpacity
-              // @ts-ignore-next-line
-              onPress={() => setAddLocationUpdate(true)}
-            >
+            <TouchableOpacity onPress={() => setAddLocationUpdate(true)}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TabBarIcon name="plus" color="#8E8E8F" />
-                <Text style={{ color: '#8E8E8F', marginLeft: 8, fontWeight: 600, fontSize: 18 }}>
+                <Text style={{ color: '#8E8E8F', marginLeft: 8, fontWeight: '600', fontSize: 18 }}>
                   Lisää päivitys
                 </Text>
               </View>
