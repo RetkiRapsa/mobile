@@ -36,12 +36,20 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
 
   const [locationFound, setLocationFound] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [recentering, setRecentering] = useState(false); // New state for re-center loading
+  const [recentering, setRecentering] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(
     null
   );
+  const [mapBounds, setMapBounds] = useState<{
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+    center: { lat: number; lng: number };
+  } | null>(null);
 
   // Helpers
   const sendMessageToMap = useCallback(
@@ -138,30 +146,14 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
       return;
     }
 
-    const fetchNearbyLocations = async () => {
-      try {
-        devLog('Fetching nearby locations for:', location.latitude, location.longitude);
-        const nearby = await getNearbyLocationsFromCoords(
-          location.latitude,
-          location.longitude,
-          MAP_SEARCH_RADIUS,
-          MAP_MAX_SPOTS
-        );
-        devLog('Fetched nearby locations:', nearby.length);
-        setVisibleLocations(nearby);
-        setLoadingError(null);
-      } catch (error) {
-        logError('Failed to fetch nearby locations:', error);
-        setLoadingError('Kohteiden lataus epäonnistui');
-        devLog('API error - not showing alert in production');
-      }
-    };
-    fetchNearbyLocations();
-  }, [location, setVisibleLocations]);
+    // Initial fetch will happen when mapBounds are available
+    devLog('Location found, waiting for map bounds to fetch nearby locations');
+  }, [location]);
 
   // Update markers when locations change
   useEffect(() => {
-    if (mapLoaded && visibleLocations.length > 0) {
+    if (mapLoaded) {
+      // Always send update, even if empty array (to clear markers)
       sendMessageToMap({
         type: 'updateMarkers',
         markers: visibleLocations.map((loc) => ({
@@ -188,6 +180,50 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     }
   }, [userLocation, mapLoaded, sendMessageToMap]);
 
+  // Fetch initial locations when map bounds are first available
+  useEffect(() => {
+    if (mapBounds && !initialFetchDone && locationFound) {
+      const fetchInitialLocations = async () => {
+        try {
+          const centerLat = mapBounds.center.lat;
+          const centerLng = mapBounds.center.lng;
+          const north = mapBounds.north;
+          const east = mapBounds.east;
+
+          // Calculate radius from map bounds (visible area)
+          const latDiff = (north - centerLat) * 111320; // degrees to meters
+          const lngDiff = (east - centerLng) * 111320 * Math.cos((centerLat * Math.PI) / 180);
+          const calculatedRadius = Math.round(Math.sqrt(latDiff * latDiff + lngDiff * lngDiff));
+
+          // Cap at 100km maximum
+          const searchRadius = Math.min(calculatedRadius, 100 * 1000);
+
+          devLog('Fetching initial locations for visible area:', {
+            center: { latitude: centerLat, longitude: centerLng },
+            calculatedRadius: calculatedRadius,
+            searchRadius: searchRadius,
+          });
+
+          const locations = await getNearbyLocationsFromCoords(
+            centerLat,
+            centerLng,
+            searchRadius,
+            MAP_MAX_SPOTS
+          );
+          devLog('Fetched initial locations:', locations.length);
+          setVisibleLocations(locations);
+          setLoadingError(null);
+          setInitialFetchDone(true); // Mark initial fetch as complete
+        } catch (error) {
+          logError('Failed to fetch initial nearby locations:', error);
+          setLoadingError('Kohteiden lataus epäonnistui');
+          setInitialFetchDone(true); // Mark as done even on error to prevent retry
+        }
+      };
+      fetchInitialLocations();
+    }
+  }, [mapBounds, initialFetchDone, locationFound, setVisibleLocations]);
+
   // Handle messages from WebView
   const handleWebViewMessage = useCallback(
     (event: any) => {
@@ -197,6 +233,9 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
         if (message.type === 'mapReady') {
           setMapLoaded(true);
           devLog('Map loaded and ready');
+        } else if (message.type === 'mapBoundsChanged') {
+          setMapBounds(message.bounds);
+          devLog('Map bounds updated:', message.bounds);
         } else if (message.type === 'markerClick') {
           const locationData = visibleLocations.find((loc) => loc.id === message.id);
           if (locationData) {
@@ -225,20 +264,52 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     setRefreshing(true);
     try {
       lastRefreshTimeRef.current = now;
+
+      // Update user's current GPS location
       const currentLocation = await getCurrentGpsLocation();
       if (currentLocation) {
-        setUserLocation(currentLocation); // Update user location marker
-        // Fetch nearby locations (without re-centering map)
+        setUserLocation(currentLocation);
+      }
+
+      // Use map center (visible area) for fetching locations
+      if (mapBounds) {
+        const centerLat = mapBounds.center.lat;
+        const centerLng = mapBounds.center.lng;
+        const north = mapBounds.north;
+        const east = mapBounds.east;
+
+        // Calculate radius from visible map area
+        const latDiff = (north - centerLat) * 111320; // degrees to meters
+        const lngDiff = (east - centerLng) * 111320 * Math.cos((centerLat * Math.PI) / 180);
+        const calculatedRadius = Math.round(Math.sqrt(latDiff * latDiff + lngDiff * lngDiff));
+
+        // Cap at 100km maximum
+        const searchRadius = Math.min(calculatedRadius, 100 * 1000);
+
+        devLog('Fetching locations for visible area:', {
+          center: { latitude: centerLat, longitude: centerLng },
+          calculatedRadius: calculatedRadius,
+          searchRadius: searchRadius,
+          bounds: mapBounds,
+        });
+
+        devLog('API call parameters:', {
+          latitude: centerLat,
+          longitude: centerLng,
+          radiusInMeters: searchRadius,
+          limit: MAP_MAX_SPOTS,
+        });
+
         const locations = await getNearbyLocationsFromCoords(
-          currentLocation.latitude,
-          currentLocation.longitude,
-          MAP_SEARCH_RADIUS,
+          centerLat,
+          centerLng,
+          searchRadius,
           MAP_MAX_SPOTS
         );
-        safeAlert('Päivitetty', `Löydettiin ${locations.length} kohdetta.`);
+        safeAlert('Kartta päivitetty', `Näytetään ${locations.length} kohdetta`);
         setVisibleLocations(locations);
       } else {
-        safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
+        safeAlert('Virhe', 'Kartan sijaintia ei voitu määrittää.');
       }
     } catch (error) {
       logError('Refresh failed:', error);
@@ -246,7 +317,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     } finally {
       setRefreshing(false);
     }
-  }, [refreshing, setVisibleLocations]);
+  }, [refreshing, setVisibleLocations, mapBounds]);
 
   // Re-center handler
   const handleRecenter = useCallback(async () => {
@@ -321,6 +392,29 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
             // Store markers
             const markers = {};
             let userMarker = null; // User location marker
+
+            // Send map bounds to React Native when map moves
+            function sendMapBounds() {
+              const bounds = map.getBounds();
+              const center = map.getCenter();
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'mapBoundsChanged',
+                bounds: {
+                  north: bounds.getNorth(),
+                  south: bounds.getSouth(),
+                  east: bounds.getEast(),
+                  west: bounds.getWest(),
+                  center: {
+                    lat: center.lat,
+                    lng: center.lng
+                  }
+                }
+              }));
+            }
+
+            // Listen for map movement (pan, zoom)
+            map.on('moveend', sendMapBounds);
+            map.on('zoomend', sendMapBounds);
 
             // Icon mapping to MaterialDesignIcons (matches MaterialCommunityIcons)
             const iconMap = {
@@ -398,8 +492,12 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
                   console.log('User location marker updated');
                 } else if (message.type === 'updateMarkers') {
                   console.log('Updating markers, count:', message.markers.length);
-                  // Clear existing markers
+                  // Clear existing markers from map
                   Object.values(markers).forEach(marker => marker.remove());
+                  // Clear the markers object
+                  for (let key in markers) {
+                    delete markers[key];
+                  }
                   
                   // Add new markers
                   message.markers.forEach(markerData => {
@@ -430,6 +528,8 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
               window.ReactNativeWebView.postMessage(JSON.stringify({
                 type: 'mapReady',
               }));
+              // Send initial bounds
+              sendMapBounds();
             }, 500);
           </script>
         </body>

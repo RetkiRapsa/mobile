@@ -116,16 +116,24 @@ export default function InfoScreen({
       <View style={styles.section}>
         <Text style={styles.heading}>Vinkkejä käyttöön</Text>
         <Text style={styles.text}>
-          • Salli puhelimessasi sijainnin käyttö, jotta näet lähelläsi olevat taukopaikat.
+          • Salli puhelimessasi sijainnin käyttö, jotta sovellus voi näyttää sijaintisi kartalla
+          sinisenä pisteenä.
         </Text>
         <Text style={styles.text}>
-          • Paina karttanäkymän vasemmassa alakulmassa olevaa pyöreää painiketta, jos haluat ladata
-          lähelläsi kohteet uudelleen.
+          • Sovellus lataa automaattisesti kohteet kartan näkyvältä alueelta kun avaat kartan.
+        </Text>
+        <Text style={styles.text}>• Voit liikuttaa ja zoomata karttaa vapaasti eri alueille.</Text>
+        <Text style={styles.text}>
+          • Vasemmassa alakulmassa oleva pyöreä painike: Päivitä kohteet kartan nykyiseltä näkyvältä
+          alueelta. Käytä tätä kun olet siirtänyt karttaa uudelle alueelle ja haluat nähdä kyseisen
+          alueen kohteet.
         </Text>
         <Text style={styles.text}>
-          • Paina karttanäkymän oikeassa alakulmassa olevaa pyöreää painiketta, jos haluat keskittää
-          kartan sen hetkiseen olinpaikkaasi.
+          • Oikeassa alakulmassa oleva pyöreä painike: Keskitä kartta takaisin nykyiseen
+          GPS-sijaintiisi ja hae kohteet. Käytä tätä jos olet eksynyt kartalla ja haluat palata
+          takaisin sijaintiisi.
         </Text>
+        <Text style={styles.text}>• Sininen piste kartalla näyttää nykyisen GPS-sijaintisi.</Text>
         <Text style={styles.text}>
           • Jos havaitset virheen kohteessa, mainitse siitä arviossasi – muut käyttäjät kiittävät!
         </Text>

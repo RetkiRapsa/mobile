@@ -159,10 +159,17 @@ api.interceptors.response.use(
 export const apiGetLocationUpdates = async (id: string, limit = 20) =>
   api.get(`/${id}/updates`, { params: { limit } });
 
-export const apiGetNearbyLocations = async (lat: number, lon: number, distance = 500, limit = 20) =>
-  api.get(`/nearby`, {
+export const apiGetNearbyLocations = async (
+  lat: number,
+  lon: number,
+  distance = 500,
+  limit = 20
+) => {
+  devLog('apiGetNearbyLocations called with:', { lat, lon, distance, limit });
+  return api.get(`/nearby`, {
     params: { lat, lon, distance, limit },
   });
+};
 
 export const apiCreateLocation = async (data: any) => api.post('', data);
 
