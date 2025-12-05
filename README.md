@@ -34,7 +34,12 @@ content:
 
 ### Expo Application Services (EAS)
 
+Build and submit:
+
     $ eas build --platform ios
     $ eas submit -p ios --latest
+
+    $ eas build --platform android
+    $ eas submit -p android --latest
 
     https://appstoreconnect.apple.com

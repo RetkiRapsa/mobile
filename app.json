@@ -2,7 +2,7 @@
   "expo": {
     "name": "RetkiRapsa",
     "slug": "RetkiRapsa",
-    "version": "1.1.1",
+    "version": "1.1.10",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "retkirapsa",
@@ -14,7 +14,7 @@
       "backgroundColor": "#eeeeee",
       "ios": {
         "image": "./assets/images/icon.png",
-        "backgroundColor": "#eeeeee",
+        "backgroundColor": "#2c5f2d",
         "resizeMode": "cover"
       }
     },

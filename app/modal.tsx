@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 
 import * as Clipboard from 'expo-clipboard';
 
