@@ -39,6 +39,9 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
   const [recentering, setRecentering] = useState(false); // New state for re-center loading
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(
+    null
+  );
 
   // Helpers
   const sendMessageToMap = useCallback(
@@ -112,9 +115,11 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
       devLog('Skipping location fetch - error state coordinates');
       setLoadingError('Sijaintia ei voitu paikallistaa');
       setLocationFound(false);
+      setUserLocation(null);
     } else {
       setLocationFound(true);
       setLoadingError(null);
+      setUserLocation({ latitude: location.latitude, longitude: location.longitude });
       resetRegion(location.latitude, location.longitude);
     }
   }, [location, resetRegion]);
@@ -172,6 +177,17 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     }
   }, [visibleLocations, mapLoaded, sendMessageToMap]);
 
+  // Update user location marker
+  useEffect(() => {
+    if (mapLoaded && userLocation) {
+      sendMessageToMap({
+        type: 'updateUserLocation',
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      });
+    }
+  }, [userLocation, mapLoaded, sendMessageToMap]);
+
   // Handle messages from WebView
   const handleWebViewMessage = useCallback(
     (event: any) => {
@@ -211,10 +227,8 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
       lastRefreshTimeRef.current = now;
       const currentLocation = await getCurrentGpsLocation();
       if (currentLocation) {
-        // Re-center map to current location
-        resetRegion(currentLocation.latitude, currentLocation.longitude);
-
-        // Fetch nearby locations
+        setUserLocation(currentLocation); // Update user location marker
+        // Fetch nearby locations (without re-centering map)
         const locations = await getNearbyLocationsFromCoords(
           currentLocation.latitude,
           currentLocation.longitude,
@@ -232,13 +246,14 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     } finally {
       setRefreshing(false);
     }
-  }, [refreshing, setVisibleLocations, resetRegion]);
+  }, [refreshing, setVisibleLocations]);
 
   // Re-center handler
   const handleRecenter = useCallback(async () => {
     setRecentering(true); // Start loading state
     const currentLocation = await getCurrentGpsLocation();
     if (currentLocation) {
+      setUserLocation(currentLocation); // Update user location marker
       resetRegion(currentLocation.latitude, currentLocation.longitude);
 
       // Also fetch and update nearby locations for the new center
@@ -305,6 +320,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
 
             // Store markers
             const markers = {};
+            let userMarker = null; // User location marker
 
             // Icon mapping to MaterialDesignIcons (matches MaterialCommunityIcons)
             const iconMap = {
@@ -350,6 +366,36 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
                   map.flyTo([message.latitude, message.longitude], message.zoom || 16, {
                     duration: 1.5 // 1.5 second animation
                   });
+                } else if (message.type === 'updateUserLocation') {
+                  console.log('Updating user location:', message.latitude, message.longitude);
+                  
+                  // Remove existing user marker
+                  if (userMarker) {
+                    userMarker.remove();
+                  }
+                  
+                  // Create a blue circle marker for user location
+                  const userIcon = L.divIcon({
+                    html: \`<div style="
+                      width: 16px;
+                      height: 16px;
+                      background-color: #007AFF;
+                      border: 3px solid white;
+                      border-radius: 50%;
+                      box-shadow: 0 0 10px rgba(0, 122, 255, 0.5);
+                    "></div>\`,
+                    className: '',
+                    iconSize: [22, 22],
+                    iconAnchor: [11, 11],
+                  });
+                  
+                  // Add new user marker
+                  userMarker = L.marker([message.latitude, message.longitude], {
+                    icon: userIcon,
+                    zIndexOffset: 1000, // Show above other markers
+                  }).addTo(map);
+                  
+                  console.log('User location marker updated');
                 } else if (message.type === 'updateMarkers') {
                   console.log('Updating markers, count:', message.markers.length);
                   // Clear existing markers
