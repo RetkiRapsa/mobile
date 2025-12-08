@@ -20,7 +20,6 @@ export default function LanguageSelector({ onLanguageChange }: LanguageSelectorP
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Kieli / Language</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, currentLocale === 'fi' && styles.buttonActive]}
