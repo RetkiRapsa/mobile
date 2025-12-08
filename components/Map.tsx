@@ -180,6 +180,16 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     }
   }, [userLocation, mapLoaded, sendMessageToMap]);
 
+  // Show alert when using default location
+  useEffect(() => {
+    if (usingDefaultLocation && locationFound) {
+      safeAlert(
+        'Sijaintia ei voitu määrittää',
+        'Sijaintiasi ei voitu paikallistaa. Näytetään Helsinki-alueen kohteita.\n\nTarkista laitteesi sijaintiasetukset.'
+      );
+    }
+  }, [usingDefaultLocation, locationFound]);
+
   // Fetch initial locations when map bounds are first available
   useEffect(() => {
     if (mapBounds && !initialFetchDone && locationFound) {
@@ -566,14 +576,6 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
         scalesPageToFit={false}
       />
 
-      {/* Show notification if using default location */}
-      {usingDefaultLocation && (
-        <View style={styles.locationWarningBanner}>
-          <Text style={styles.locationWarningText}>⚠️ Sijaintiasi ei voitu määrittää</Text>
-          <Text style={styles.locationWarningSubtext}>Näytetään Helsinki-alueen kohteita</Text>
-        </View>
-      )}
-
       <RefreshButton onPress={handleRefresh} loading={refreshing} />
       <ReCenterButton onPress={handleRecenter} loading={recentering} />
     </>
@@ -596,29 +598,5 @@ const styles = StyleSheet.create({
   map: {
     width: '100%',
     height: '100%',
-  },
-  locationWarningBanner: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    right: 20,
-    backgroundColor: 'rgba(255, 152, 0, 0.95)',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  locationWarningText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 4,
-  },
-  locationWarningSubtext: {
-    fontSize: 14,
-    color: '#000',
   },
 });
