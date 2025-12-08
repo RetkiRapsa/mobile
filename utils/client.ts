@@ -3,13 +3,13 @@ import axios, { AxiosError } from 'axios';
 import { clearToken, getValidToken, registerDeviceAndGetToken } from './auth';
 import { devLog, logError } from './logger';
 
-const RETKIRAPSA_API_IP = process.env.EXPO_PUBLIC_RETKIRAPSA_API_IP || 'localhost';
-const API_BASE = `http://${RETKIRAPSA_API_IP}:8080/api/locations`;
+const RETKIRAPSA_API_DOMAIN = process.env.EXPO_PUBLIC_RETKIRAPSA_API_DOMAIN || 'localhost';
+const API_URL = `https://${RETKIRAPSA_API_DOMAIN}/locations`;
 const REQUEST_TIMEOUT = 15000; // 15 seconds
 const MAX_RETRIES = 2;
 
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: REQUEST_TIMEOUT,
 });
@@ -37,9 +37,6 @@ function getUserFriendlyError(error: AxiosError): string {
   if (!error.response) {
     if (error.code === 'ECONNABORTED') {
       return 'Pyyntö aikakatkaistiin. Tarkista internet-yhteytesi.';
-    }
-    if (error.message?.includes('Network Error') || error.message?.includes('CLEARTEXT')) {
-      return 'Verkkovirhe. Tarkista internet-yhteytesi ja yritä uudelleen.';
     }
     return 'Ei yhteyttä palvelimeen. Tarkista internet-yhteytesi.';
   }
@@ -96,13 +93,6 @@ api.interceptors.response.use(
         method: originalRequest?.method,
         code: error.code,
       });
-
-      // Check if it's a cleartext traffic error
-      if (error.message?.includes('Network Error') || error.message?.includes('CLEARTEXT')) {
-        logError('CLEARTEXT HTTP ERROR: Android may be blocking HTTP traffic');
-        logError('Ensure network security config is properly set');
-        logError('API URL:', API_BASE);
-      }
     } else {
       logError('API error:', {
         status: error.response.status,

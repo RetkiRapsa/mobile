@@ -23,9 +23,9 @@ A cross-platform mobile application built with React Native and TypeScript.
 To connect the app to a specific backend server, create `.env.local` file in the root directory with the following
 content:
 
-    EXPO_PUBLIC_RETKIRAPSA_API_IP=<SERVER_IP_ADDRESS>
+    EXPO_PUBLIC_RETKIRAPSA_API_DOMAIN=<RETKIRAPSA_API_DOMAIN>
 
-- AWS EC2 Instance: 13.62.228.65
+- VPS Instance: api.retkirapsa.com
 - Local Network Instance for iPhone via Expo Go: 192.168.8.160
 
 ### Running the App

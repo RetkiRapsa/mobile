@@ -37,11 +37,11 @@ export default function InstructionsScreen() {
       <Text style={[styles.title, { color: foregroundColor }]}>RetkiRapsa</Text>
       <Text style={{ color: foregroundColor }}>Versio {appConfig.expo.version}</Text>
       <Text style={{ color: foregroundColor }}>Copyright (c) {new Date().getFullYear()}</Text>
-      <Text style={{ color: foregroundColor }}>AgaSoft / Artur Gajewski</Text>
+      <Text style={{ color: foregroundColor }}>Artur Gajewski</Text>
       <Separator />
       <Text style={{ color: foregroundColor }}>
-        {process.env.EXPO_PUBLIC_RETKIRAPSA_API_IP === '13.62.228.65'
-          ? 'Powered by AWS'
+        {process.env.EXPO_PUBLIC_RETKIRAPSA_API_DOMAIN === 'api.retkirapsa.com'
+          ? 'Powered by VPS'
           : 'Development version'}
       </Text>
       {deviceId && (

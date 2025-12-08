@@ -4,8 +4,8 @@ import * as SecureStore from 'expo-secure-store';
 import getOrCreateUUID from './identity';
 import { devLog, logError } from './logger';
 
-const API_IP = process.env.EXPO_PUBLIC_RETKIRAPSA_API_IP || 'localhost';
-const API_URL = `http://${API_IP}:8080`;
+const API_DOMAIN = process.env.EXPO_PUBLIC_RETKIRAPSA_API_DOMAIN || 'localhost';
+const API_URL = `https://${API_DOMAIN}`;
 const TOKEN_KEY = 'retkirapsa_jwt_token';
 const REQUEST_TIMEOUT = 15000; // 15 seconds
 
