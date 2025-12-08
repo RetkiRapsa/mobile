@@ -7,6 +7,7 @@ import { useAppContext } from '@/app/_layout';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { useTranslation } from '@/utils/i18n';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
@@ -38,6 +39,7 @@ function HeaderRightIcon() {
 
 export default function TabLayout() {
   // All hooks are called unconditionally at the top
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const { hasReadSplashInfo } = useAppContext();
   const headerShown = useClientOnlyValue(false, true);
@@ -53,8 +55,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: hasReadSplashInfo ? 'Kartta' : 'Tervetuloa',
-          headerTitle: hasReadSplashInfo ? 'Selaa karttaa' : 'Lue tämä ensin!',
+          title: hasReadSplashInfo ? t('tabMap') : t('headerWelcome'),
+          headerTitle: hasReadSplashInfo ? t('headerMap') : t('headerReadFirst'),
           tabBarIcon: ({ color }) => <TabBarIcon name="map" color={color} />,
           headerRight: () => <HeaderRightIcon />,
           tabBarStyle: { display: hasReadSplashInfo ? 'flex' : 'none' },
@@ -63,8 +65,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="createNewLocation"
         options={{
-          title: 'Uusi',
-          headerTitle: 'Luo uusi kohde',
+          title: t('tabNew'),
+          headerTitle: t('headerNewLocation'),
           tabBarIcon: ({ color }) => <TabBarIcon name="plus" color={color} />,
           headerRight: () => <HeaderRightIcon />,
         }}
@@ -72,7 +74,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="info"
         options={{
-          title: 'Ohjeet',
+          title: t('tabInfo'),
           tabBarIcon: ({ color }) => <TabBarIcon name="info" color={color} />,
           headerRight: () => <HeaderRightIcon />,
         }}

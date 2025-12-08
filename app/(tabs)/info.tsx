@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, useColorScheme } from 'react-
 
 import { Text, View } from '@/components/Themed';
 import colors from '@/constants/Colors';
+import { useTranslation } from '@/utils/i18n';
 
 export default function InfoScreen({
   onAcknowledge,
@@ -10,6 +11,7 @@ export default function InfoScreen({
   onAcknowledge?: () => void;
   showButton?: boolean;
 }) {
+  const { t } = useTranslation();
   const backgroundColor =
     useColorScheme() === 'dark' ? colors.dark.background : colors.light.background;
   const foregroundColor = useColorScheme() === 'dark' ? colors.dark.text : colors.light.text;
@@ -22,135 +24,68 @@ export default function InfoScreen({
     >
       <Text style={styles.title}>RetkiRapsa</Text>
 
-      <Text style={styles.intro}>
-        RetkiRapsa on helppokäyttöinen sovellus retkikohteiden arvioimiseen ja löytämiseen. Voit
-        etsiä retkikohteita kartalta, lukea muiden retkeilijöiden arvosteluja ja jakaa omat
-        kokemuksesi – ilman kirjautumista!
-      </Text>
+      <Text style={styles.intro}>{t('infoIntro')}</Text>
 
       <View style={[styles.section, { backgroundColor }]}>
-        <Text style={styles.heading}>Etsi kohteita kartalta</Text>
-        <Text style={styles.text}>
-          • Sovellus näyttää lähelläsi olevat taukopaikat, kuten laavut, nuotiopaikat, vessat ja
-          parkkipaikat.
-        </Text>
-        <Text style={styles.text}>
-          • Voit selata karttaa ja zoomata etsiäksesi kohteita haluamaltasi alueelta.
-        </Text>
+        <Text style={styles.heading}>{t('infoSearchTitle')}</Text>
+        <Text style={styles.text}>{t('infoSearchText1')}</Text>
+        <Text style={styles.text}>{t('infoSearchText2')}</Text>
       </View>
 
       <View style={[styles.section, { backgroundColor }]}>
-        <Text style={styles.heading}>Kartan ikonien värit</Text>
-        <Text style={styles.text}>
-          • Mikäli kohteen ikoni on punainen, tarkoittaa se sitä, ettei kohde ole käytössä tai jokin
-          luonnonvoima on vaikuttanut siihen niin, ettei kohdetta voi käyttää. Muussa tapauksessa
-          ikoni on musta.
-        </Text>
-        <Text style={styles.text}>
-          • Mikäli kohteen reuna on punainen, tarkoittaa se sitä, että kohteessa on havaittu
-          punkkeja. Muussa tapauksessa reuna on vihreä.
-        </Text>
-        <Text style={styles.text}>
-          • Mikäli et erota ikonin värejä, saat samat tiedot näkyviin napauttamalla kohteen ikonia
-          kartalla.
-        </Text>
+        <Text style={styles.heading}>{t('infoIconColorsTitle')}</Text>
+        <Text style={styles.text}>{t('infoIconColorsText1')}</Text>
+        <Text style={styles.text}>{t('infoIconColorsText2')}</Text>
+        <Text style={styles.text}>{t('infoIconColorsText3')}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Lue muiden päivityksiä</Text>
-        <Text style={styles.text}>• Napauta kartalla näkyvää ikonia saadaksesi lisätietoja.</Text>
-        <Text style={styles.text}>
-          • Näet kohteiden päivityksiä ja huomioita käyttäjiltä, jotka ovat vierailleet kohteessa
-          ennen sinua.
-        </Text>
+        <Text style={styles.heading}>{t('infoReadUpdatesTitle')}</Text>
+        <Text style={styles.text}>{t('infoReadUpdatesText1')}</Text>
+        <Text style={styles.text}>{t('infoReadUpdatesText2')}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Jätä oma päivitys</Text>
-        <Text style={styles.text}>
-          • Lisää oma päivitys painamalla kohteen omalla sivulla painamalla "Lisää
-          päivitys"-painiketta. Huomioi, että lisätäksesi päivityksen kohteeseen, sinun tulee olla
-          lähellä kyseistä kohdetta.
-        </Text>
-        <Text style={styles.text}>
-          • Arvioi mm. siisteys, yleisvaikutelma ja kirjoita lyhyt kommentti.
-        </Text>
-        <Text style={styles.text}>
-          • Sovellus tallentaa päivityksesi ja muut käyttäjät näkevät sen heti kyseisessä kohteessa.
-        </Text>
+        <Text style={styles.heading}>{t('infoAddUpdateTitle')}</Text>
+        <Text style={styles.text}>{t('infoAddUpdateText1')}</Text>
+        <Text style={styles.text}>{t('infoAddUpdateText2')}</Text>
+        <Text style={styles.text}>{t('infoAddUpdateText3')}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Puuttuuko kartalta joku kohde?</Text>
-        <Text style={styles.text}>
-          • Ei hätää, voit lisätä uuden kohteen kartalle klikkaamalla "+" painiketta.
-        </Text>
-        <Text style={styles.text}>
-          • Uusi kohde tallennetaan aina siihen kohtaan kartalla jossa olet GPS:n mukaan kyseisellä
-          hetkellä.
-        </Text>
-        <Text style={styles.text}>
-          • Valitse kohteelle nimi, esim. "Iso-Melkuttimen lepakkolaavu" ja lisää kohteen tyyppi.
-        </Text>
-        <Text style={styles.text}>
-          • Kun tiedot on täytetty, paina "Tallenna" ja uusi kohde lisätään kartalle heti jonka
-          jälkeen voit lisätä siihen päivityksiä.
-        </Text>
+        <Text style={styles.heading}>{t('infoMissingLocationTitle')}</Text>
+        <Text style={styles.text}>{t('infoMissingLocationText1')}</Text>
+        <Text style={styles.text}>{t('infoMissingLocationText2')}</Text>
+        <Text style={styles.text}>{t('infoMissingLocationText3')}</Text>
+        <Text style={styles.text}>{t('infoMissingLocationText4')}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Ei vaadi rekisteröitymistä</Text>
-        <Text style={styles.text}>
-          • Sovellus ei kerää henkilötietoja. Sovelluksen asennuksen jälkeen, ensimmäisen
-          käynnistyksen yhteydessä luodaan sinulle yksilöllinen tunniste jota käytetään kohteiden
-          luomisen ja päivityksien tallentamisen yhteydessä. Tämä yksilöllinen tunneiste ei sisällä
-          mitään henkilökohtaisia tietoja ja säilyy laitteellasi ainoastaan niin kauan kuin sovellus
-          on asennettuna laitteessasi.
-        </Text>
-        <Text style={styles.text}>
-          • Tällä tavalla sinun ei tarvitse rekisteröityä käyttääksesi sovellusta ja voit arvioida
-          kohteita nopeasti ja vaivatta.
-        </Text>
+        <Text style={styles.heading}>{t('infoNoRegistrationTitle')}</Text>
+        <Text style={styles.text}>{t('infoNoRegistrationText1')}</Text>
+        <Text style={styles.text}>{t('infoNoRegistrationText2')}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Vinkkejä käyttöön</Text>
-        <Text style={styles.text}>
-          • Salli puhelimessasi sijainnin käyttö, jotta sovellus voi näyttää sijaintisi kartalla
-          sinisenä pisteenä.
-        </Text>
-        <Text style={styles.text}>
-          • Sovellus lataa automaattisesti kohteet kartan näkyvältä alueelta kun avaat kartan.
-        </Text>
-        <Text style={styles.text}>• Voit liikuttaa ja zoomata karttaa vapaasti eri alueille.</Text>
-        <Text style={styles.text}>
-          • Vasemmassa alakulmassa oleva pyöreä painike: Päivitä kohteet kartan nykyiseltä näkyvältä
-          alueelta. Käytä tätä kun olet siirtänyt karttaa uudelle alueelle ja haluat nähdä kyseisen
-          alueen kohteet.
-        </Text>
-        <Text style={styles.text}>
-          • Oikeassa alakulmassa oleva pyöreä painike: Keskitä kartta takaisin nykyiseen
-          GPS-sijaintiisi ja hae kohteet. Käytä tätä jos olet eksynyt kartalla ja haluat palata
-          takaisin sijaintiisi.
-        </Text>
-        <Text style={styles.text}>• Sininen piste kartalla näyttää nykyisen GPS-sijaintisi.</Text>
-        <Text style={styles.text}>
-          • Jos havaitset virheen kohteessa, mainitse siitä arviossasi – muut käyttäjät kiittävät!
-        </Text>
+        <Text style={styles.heading}>{t('infoTipsTitle')}</Text>
+        <Text style={styles.text}>{t('infoTipsText1')}</Text>
+        <Text style={styles.text}>{t('infoTipsText2')}</Text>
+        <Text style={styles.text}>{t('infoTipsText3')}</Text>
+        <Text style={styles.text}>{t('infoTipsText4')}</Text>
+        <Text style={styles.text}>{t('infoTipsText5')}</Text>
+        <Text style={styles.text}>{t('infoTipsText6')}</Text>
+        <Text style={styles.text}>{t('infoTipsText7')}</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.heading}>Palaute ja kehitys</Text>
-        <Text style={styles.text}>
-          RetkiRapsa kehittyy palautteen perusteella. Lähetä minulle kehitysehdotuksia tai
-          virheilmoituksia:
-        </Text>
-        <Text style={styles.text}>Sähköposti: artur.gajewski@hotmail.com</Text>
+        <Text style={styles.heading}>{t('infoFeedbackTitle')}</Text>
+        <Text style={styles.text}>{t('infoFeedbackText1')}</Text>
+        <Text style={styles.text}>{t('infoFeedbackEmail')}</Text>
       </View>
 
       {showButton && onAcknowledge && (
         <TouchableOpacity style={[buttonStyle, { marginTop: 20 }]} onPress={onAcknowledge}>
-          <Text style={{ color: foregroundColor }}>Aloita sovellus</Text>
+          <Text style={{ color: foregroundColor }}>{t('startApp')}</Text>
         </TouchableOpacity>
       )}
     </ScrollView>

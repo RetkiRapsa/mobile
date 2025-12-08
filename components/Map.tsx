@@ -18,6 +18,7 @@ import {
 } from '@/constants/Location';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
+import { useTranslation } from '@/utils/i18n';
 import { devLog, logError } from '@/utils/logger';
 import { getIconName } from '@/utils/map';
 import { safeAlert } from '@/utils/safeAlert';
@@ -33,6 +34,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
   const lastRefreshTimeRef = useRef<number>(0);
   const router = useRouter();
   const { visibleLocations, setVisibleLocations, setSelectedLocation } = useAppContext();
+  const { t } = useTranslation();
 
   const [locationFound, setLocationFound] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -121,7 +123,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
       location.longitude === ERROR_LOCATION_LONGITUDE
     ) {
       devLog('Skipping location fetch - error state coordinates');
-      setLoadingError('Sijaintia ei voitu paikallistaa');
+      setLoadingError(t('locationNotDetermined'));
       setLocationFound(false);
       setUserLocation(null);
     } else {
@@ -141,7 +143,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
       location.longitude === ERROR_LOCATION_LONGITUDE
     ) {
       devLog('Skipping location fetch - error state coordinates');
-      setLoadingError('Sijaintia ei voitu määrittää');
+      setLoadingError(t('locationNotDetermined'));
       setLocationFound(false);
       return;
     }
@@ -183,10 +185,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
   // Show alert when using default location
   useEffect(() => {
     if (usingDefaultLocation && locationFound) {
-      safeAlert(
-        'Sijaintia ei voitu määrittää',
-        'Sijaintiasi ei voitu paikallistaa. Näytetään Helsinki-alueen kohteita.\n\nTarkista laitteesi sijaintiasetukset.'
-      );
+      safeAlert(t('locationNotDetermined'), t('locationNotDeterminedMessage'));
     }
   }, [usingDefaultLocation, locationFound]);
 
@@ -226,7 +225,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
           setInitialFetchDone(true); // Mark initial fetch as complete
         } catch (error) {
           logError('Failed to fetch initial nearby locations:', error);
-          setLoadingError('Kohteiden lataus epäonnistui');
+          setLoadingError(t('updateFailed'));
           setInitialFetchDone(true); // Mark as done even on error to prevent retry
         }
       };
@@ -265,10 +264,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     if (refreshing) return;
     const now = Date.now();
     if (now - lastRefreshTimeRef.current < MAP_REFRESH_COOLDOWN_MS) {
-      safeAlert(
-        'Huomio',
-        'Et voi päivittää karttaa näin usein. Odota hetki ennen kuin päivität uudelleen.'
-      );
+      safeAlert(t('notice'), t('cannotRefreshSoOften') + ' ' + t('waitBeforeRefresh'));
       return;
     }
     setRefreshing(true);
@@ -310,14 +306,14 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
           searchRadius,
           MAP_MAX_SPOTS
         );
-        safeAlert('Kartta päivitetty', `Näytetään ${locations.length} kohdetta`);
+        safeAlert(t('mapUpdated'), `${t('showing')} ${locations.length} ${t('locations')}`);
         setVisibleLocations(locations);
       } else {
-        safeAlert('Virhe', 'Kartan sijaintia ei voitu määrittää.');
+        safeAlert(t('error'), t('mapLocationNotDetermined'));
       }
     } catch (error) {
       logError('Refresh failed:', error);
-      safeAlert('Virhe', 'Päivitys epäonnistui. Yritä uudelleen.');
+      safeAlert(t('error'), t('updateFailed'));
     } finally {
       setRefreshing(false);
     }
@@ -344,7 +340,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
         logError('Failed to fetch locations after re-center:', error);
       }
     } else {
-      safeAlert('Virhe', 'Sijaintiasi ei voitu paikallistaa. Tarkista laitteesi asetukset.');
+      safeAlert(t('error'), t('locationNotLocated'));
     }
     setRecentering(false); // End loading state
   }, [resetRegion, setVisibleLocations]);
@@ -546,10 +542,10 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     return (
       <View style={[styles.container, { backgroundColor: '#000' }]}>
         <View style={styles.centered}>
-          <Text style={styles.loadingText}>{loadingError || 'Ladataan tietoja...'}</Text>
+          <Text style={styles.loadingText}>{loadingError || t('loadingData')}</Text>
           {loadingError && (
             <Text style={[styles.loadingText, { fontSize: 16, marginTop: 20 }]}>
-              Tarkista laitteen sijaintiasetukset
+              {t('checkLocationSettings')}
             </Text>
           )}
         </View>

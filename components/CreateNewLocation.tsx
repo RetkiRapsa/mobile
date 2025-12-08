@@ -14,6 +14,7 @@ import Location from '@/types/Location';
 import createNewLocation from '@/utils/createLocation';
 import { hasNearbyLocations } from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
+import { useTranslation } from '@/utils/i18n';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -30,16 +31,7 @@ enum LocationTypeEnum {
   OTHER = 'OTHER',
 }
 
-const typeOptions = [
-  { value: LocationTypeEnum.CAMPING_AREA, label: 'Telttailu' },
-  { value: LocationTypeEnum.FIREPLACE, label: 'Nuotio' },
-  { value: LocationTypeEnum.LAAVU, label: 'Laavu' },
-  { value: LocationTypeEnum.TOILET, label: 'WC' },
-  { value: LocationTypeEnum.BEACH, label: 'Uimaranta' },
-  { value: LocationTypeEnum.BRIDGE, label: 'Silta' },
-  { value: LocationTypeEnum.PARKING, label: 'Pysäköinti' },
-  { value: LocationTypeEnum.OTHER, label: 'Muu' },
-];
+// Type options will be localized in the component
 
 const getIconName = (type: string) => {
   switch (type) {
@@ -63,6 +55,7 @@ const getIconName = (type: string) => {
 };
 
 export default function CreateNewLocationScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { identity, visibleLocations, setVisibleLocations } = useAppContext();
   const colorScheme = useColorScheme();
@@ -75,6 +68,21 @@ export default function CreateNewLocationScreen() {
     device: undefined as string | undefined,
   });
   const [loading, setLoading] = useState(false);
+
+  // Localized type options
+  const typeOptions = useMemo(
+    () => [
+      { value: LocationTypeEnum.CAMPING_AREA, label: t('typeCamping') },
+      { value: LocationTypeEnum.FIREPLACE, label: t('typeFireplace') },
+      { value: LocationTypeEnum.LAAVU, label: t('typeLaavu') },
+      { value: LocationTypeEnum.TOILET, label: t('typeToilet') },
+      { value: LocationTypeEnum.BEACH, label: t('typeBeach') },
+      { value: LocationTypeEnum.BRIDGE, label: t('typeBridge') },
+      { value: LocationTypeEnum.PARKING, label: t('typeParking') },
+      { value: LocationTypeEnum.OTHER, label: t('typeOther') },
+    ],
+    [t]
+  );
 
   const theme = useMemo(
     () => ({
@@ -99,31 +107,25 @@ export default function CreateNewLocationScreen() {
           location &&
           hasNearbyLocations(visibleLocations, location.latitude, location.longitude)
         ) {
-          Alert.alert(
-            'Huomio',
-            'Lähelläsi on kohteita 10 metrin säteellä. Varmista, ettei kohde ole jo olemassa.'
-          );
+          Alert.alert(t('notice'), t('nearbyLocationWarning'));
         }
       })();
       return () => {
         isActive = false;
       };
-    }, [visibleLocations])
+    }, [visibleLocations, t])
   );
 
   // Save handler
   const handleSave = useCallback(async () => {
     if (!form.type || !form.name) {
-      Alert.alert('Huomio', 'Kohteen nimi ja tyyppi ovat pakollisia kenttiä.');
+      Alert.alert(t('notice'), t('requiredFields'));
       return;
     }
     setLoading(true);
     const location = await getCurrentGpsLocation();
     if (!location) {
-      Alert.alert(
-        'Virhe',
-        'Sijaintiasi ei voitu paikallistaa. Varmista, että sijainti on sallittu sovellukselle.'
-      );
+      Alert.alert(t('error'), t('locationNotLocated'));
       setLoading(false);
       return;
     }
@@ -143,11 +145,11 @@ export default function CreateNewLocationScreen() {
           device: undefined,
         });
         setVisibleLocations([...(visibleLocations || []), newLocation]);
-        Alert.alert(`${newLocation.name} on nyt lisätty kartalle`);
+        Alert.alert(`${newLocation.name} ${t('locationAdded')}`);
         router.navigate('/');
       }
     } catch {
-      Alert.alert('Virhe', 'Kohdetta ei voitu lisätä. Kokeile uudelleen myöhemmin.');
+      Alert.alert(t('error'), t('locationAddFailed'));
     }
     setLoading(false);
   }, [form, identity, visibleLocations, setVisibleLocations, router]);
@@ -155,11 +157,8 @@ export default function CreateNewLocationScreen() {
   // Render
   return (
     <ScrollView contentContainerStyle={[styles.content, { backgroundColor: theme.background }]}>
-      <Text style={{ marginBottom: 30 }}>
-        Huom! Uusi kohde tallennetaan siihen kohtaan kartalla jossa olet GPS:n mukaan tällä
-        hetkellä.
-      </Text>
-      <Text style={styles.label}>Kohteen nimi:</Text>
+      <Text style={{ marginBottom: 30 }}>{t('gpsLocationNote')}</Text>
+      <Text style={styles.label}>{t('locationName')}:</Text>
       <TextInput
         style={[
           styles.input,
@@ -172,8 +171,9 @@ export default function CreateNewLocationScreen() {
         ]}
         value={form.name}
         onChangeText={(name) => setForm((prev) => ({ ...prev, name }))}
+        placeholder={t('locationNamePlaceholder')}
       />
-      <Text style={styles.label}>Tyyppi:</Text>
+      <Text style={styles.label}>{t('locationType')}:</Text>
       <View style={styles.typeOptionsRow}>
         {typeOptions.map((option) => (
           <TouchableOpacity
@@ -198,7 +198,7 @@ export default function CreateNewLocationScreen() {
         style={[theme.button, { marginTop: 10 }]}
         onPress={handleSave}
       >
-        <Text style={{ color: theme.text }}>{loading ? 'Tallennetaan...' : 'Luo kohde'}</Text>
+        <Text style={{ color: theme.text }}>{loading ? t('loadingData') : t('save')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

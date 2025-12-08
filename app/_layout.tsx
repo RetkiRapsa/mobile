@@ -9,6 +9,7 @@ import { ProductionErrorBoundary } from '@/components/ProductionErrorBoundary';
 import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import Location from '@/types/Location';
+import { loadSavedLocale, useTranslation } from '@/utils/i18n';
 import getOrCreateUUID from '@/utils/identity';
 import { splashInfoSeen } from '@/utils/splashInfo';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -65,6 +66,13 @@ function AppProvider({ children }: { children: React.ReactNode }) {
   const [visibleLocations, setVisibleLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
+  // Load saved language preference on app start
+  useEffect(() => {
+    loadSavedLocale().catch((error) => {
+      console.error('Failed to load saved locale:', error);
+    });
+  }, []);
+
   useEffect(() => {
     const checkSplashInfo = async () => {
       try {
@@ -110,6 +118,7 @@ function AppProvider({ children }: { children: React.ReactNode }) {
 }
 
 function RootLayoutNav({ children }: { children?: React.ReactNode }) {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   return (
     <ProductionErrorBoundary>
@@ -122,16 +131,16 @@ function RootLayoutNav({ children }: { children?: React.ReactNode }) {
               name="modal"
               options={{
                 presentation: 'card',
-                headerTitle: 'Tietoa',
-                headerBackTitle: 'Takaisin',
+                headerTitle: t('aboutHeader'),
+                headerBackTitle: t('backButton'),
               }}
             />
             <Stack.Screen
               name="locationDetails"
               options={{
                 presentation: 'card',
-                headerTitle: 'Kohteen tiedot',
-                headerBackTitle: 'Takaisin',
+                headerTitle: t('locationDetailsHeader'),
+                headerBackTitle: t('backButton'),
               }}
             />
           </Stack>

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 import * as Clipboard from 'expo-clipboard';
 
+import LanguageSelector from '@/components/LanguageSelector';
 import colors from '@/constants/Colors';
+import { useTranslation } from '@/utils/i18n';
 import getOrCreateUUID from '@/utils/identity';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -16,6 +18,7 @@ const Separator: React.FC = () => (
 );
 
 export default function InstructionsScreen() {
+  const { t } = useTranslation();
   const backgroundColor =
     useColorScheme() === 'dark' ? colors.dark.background : colors.light.background;
   const foregroundColor = useColorScheme() === 'dark' ? colors.dark.text : colors.light.text;
@@ -28,25 +31,31 @@ export default function InstructionsScreen() {
   const copyToClipboard = async () => {
     if (deviceId) {
       await Clipboard.setStringAsync(deviceId);
-      Alert.alert('Kopioitu', 'Tunniste kopioitu leikepöydälle');
+      Alert.alert(t('copied'), t('deviceIdCopied'));
     }
   };
 
   return (
     <View style={[styles.container, { backgroundColor: backgroundColor }]}>
       <Text style={[styles.title, { color: foregroundColor }]}>RetkiRapsa</Text>
-      <Text style={{ color: foregroundColor }}>Versio {appConfig.expo.version}</Text>
-      <Text style={{ color: foregroundColor }}>Copyright (c) {new Date().getFullYear()}</Text>
+      <Text style={{ color: foregroundColor }}>
+        {t('version')} {appConfig.expo.version}
+      </Text>
+      <Text style={{ color: foregroundColor }}>
+        {t('copyright')} {new Date().getFullYear()}
+      </Text>
       <Text style={{ color: foregroundColor }}>Artur Gajewski</Text>
+      <Separator />
+      <LanguageSelector />
       <Separator />
       <Text style={{ color: foregroundColor }}>
         {process.env.EXPO_PUBLIC_RETKIRAPSA_API_DOMAIN === 'api.retkirapsa.com'
-          ? 'Powered by VPS'
-          : 'Development version'}
+          ? t('poweredByVPS')
+          : t('developmentVersion')}
       </Text>
       {deviceId && (
         <>
-          <Text style={{ color: foregroundColor, marginTop: 20 }}>Tunniste:</Text>
+          <Text style={{ color: foregroundColor, marginTop: 20 }}>{t('deviceId')}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
             <Text style={{ color: foregroundColor, marginRight: 10 }}>{deviceId}</Text>
           </View>
@@ -62,10 +71,7 @@ export default function InstructionsScreen() {
         <Text
           style={{ fontSize: 15, marginBottom: 10, textAlign: 'center', color: foregroundColor }}
         >
-          RetkiRapsa ei kerää tai lähetä käyttäjätietoja mihinkään palveluun. Sovellus käyttää
-          laitteesi sijaintia vain kartan näyttämiseen ja kohteiden näyttämiseen. Ensimmäisen
-          käynnistyksen yhteydessä luodaan yksilöllinen tunniste jota käytetään raporttien
-          tallentamisen yhteydessä.
+          {t('privacyNotice')}
         </Text>
       </View>
     </View>
