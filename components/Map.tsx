@@ -275,12 +275,6 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     try {
       lastRefreshTimeRef.current = now;
 
-      // Update user's current GPS location
-      const currentLocation = await getCurrentGpsLocation();
-      if (currentLocation) {
-        setUserLocation(currentLocation);
-      }
-
       // Use map center (visible area) for fetching locations
       if (mapBounds) {
         const centerLat = mapBounds.center.lat;
