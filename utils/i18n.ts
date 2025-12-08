@@ -92,7 +92,32 @@ type TranslationKey =
   | 'startApp'
   | 'aboutHeader'
   | 'backButton'
-  | 'locationDetailsHeader';
+  | 'locationDetailsHeader'
+  | 'locationNotSelected'
+  | 'inUse'
+  | 'yes'
+  | 'no'
+  | 'ticksDetected'
+  | 'latestUpdates'
+  | 'noUpdates'
+  | 'addUpdate'
+  | 'coordinatesCopied'
+  | 'loading'
+  | 'observationAtLocation'
+  | 'updateTextRequired'
+  | 'locationInUse'
+  | 'ticksObserved'
+  | 'saving'
+  | 'cancel'
+  | 'updateSaveFailed'
+  | 'success'
+  | 'updateAdded'
+  | 'authenticationFailed'
+  | 'serverError'
+  | 'noConnection'
+  | 'somethingWentWrong'
+  | 'unexpectedError'
+  | 'tryAgainButton';
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -212,6 +237,32 @@ const translations: { [locale: string]: Translations } = {
     aboutHeader: 'Tietoa',
     backButton: 'Takaisin',
     locationDetailsHeader: 'Kohteen tiedot',
+    locationNotSelected: 'Sijaintia ei valittu',
+    inUse: 'Käytössä',
+    yes: 'Kyllä',
+    no: 'Ei',
+    ticksDetected: 'Punkkeja havaittu',
+    latestUpdates: 'Viimeisimmät päivitykset:',
+    noUpdates: 'Ei päivityksiä',
+    addUpdate: 'Lisää päivitys',
+    coordinatesCopied: 'Kohteen koordinaatit kopioitu leikepöydälle',
+    loading: 'Ladataan...',
+    observationAtLocation: 'Havaintosi kohteessa:',
+    updateTextRequired: 'Päivitysteksti on pakollinen.',
+    locationInUse: 'Kohde käytössä',
+    ticksObserved: 'Punkkeja havaittu',
+    saving: 'Tallennetaan...',
+    cancel: 'Peruuta',
+    updateSaveFailed: 'Päivitystä ei voitu tallentaa. Yritä uudelleen.',
+    success: 'Onnistui!',
+    updateAdded: 'Päivityksesi on nyt lisätty kohteeseen.',
+    authenticationFailed: 'Autentikointi epäonnistui. Yritä sulkea ja avata sovellus uudelleen.',
+    serverError: 'Palvelinvirhe. Yritä myöhemmin uudelleen.',
+    noConnection: 'Ei yhteyttä palvelimeen. Tarkista internetyhteytesi.',
+    somethingWentWrong: 'Jokin meni pieleen',
+    unexpectedError:
+      'Sovellus kohtasi odottamattoman virheen.\n\nSulje ja avaa sovellus uudelleen.',
+    tryAgainButton: 'Yritä uudelleen',
   },
   en: {
     locationNotDetermined: 'Location could not be determined',
@@ -326,6 +377,31 @@ const translations: { [locale: string]: Translations } = {
     aboutHeader: 'About',
     backButton: 'Back',
     locationDetailsHeader: 'Location details',
+    locationNotSelected: 'No location selected',
+    inUse: 'In use',
+    yes: 'Yes',
+    no: 'No',
+    ticksDetected: 'Ticks detected',
+    latestUpdates: 'Latest updates:',
+    noUpdates: 'No updates',
+    addUpdate: 'Add update',
+    coordinatesCopied: 'Location coordinates copied to clipboard',
+    loading: 'Loading...',
+    observationAtLocation: 'Your observation at the location:',
+    updateTextRequired: 'Update text is required.',
+    locationInUse: 'Location in use',
+    ticksObserved: 'Ticks observed',
+    saving: 'Saving...',
+    cancel: 'Cancel',
+    updateSaveFailed: 'Could not save update. Please try again.',
+    success: 'Success!',
+    updateAdded: 'Your update has been added to the location.',
+    authenticationFailed: 'Authentication failed. Try closing and reopening the app.',
+    serverError: 'Server error. Please try again later.',
+    noConnection: 'No connection to server. Check your internet connection.',
+    somethingWentWrong: 'Something went wrong',
+    unexpectedError: 'The app encountered an unexpected error.\n\nPlease close and reopen the app.',
+    tryAgainButton: 'Try again',
   },
 };
 

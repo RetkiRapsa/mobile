@@ -18,6 +18,7 @@ import LocationUpdate from '@/types/LocationUpdate';
 import getLocationUpdates from '@/utils/getLocationUpdates';
 import { isTooFarFromLocation } from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
+import { getLocale, useTranslation } from '@/utils/i18n';
 import { getIconName } from '@/utils/map';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -30,6 +31,7 @@ function TabBarIcon(props: {
 }
 
 export default function LocationDetailsScreen() {
+  const { t } = useTranslation();
   const backgroundColor =
     useColorScheme() === 'dark' ? colors.dark.background : colors.light.background;
   const footerBackgroundColor = useColorScheme() === 'dark' ? '#131313' : '#ffffff';
@@ -85,7 +87,8 @@ export default function LocationDetailsScreen() {
               device: string;
               created: string;
             }) => {
-              const createdAt = new Date(update.created).toLocaleString('fi-FI');
+              const locale = getLocale() === 'fi' ? 'fi-FI' : 'en-US';
+              const createdAt = new Date(update.created).toLocaleString(locale);
               return {
                 id: update.id,
                 locationId: update.locationId,
@@ -114,7 +117,7 @@ export default function LocationDetailsScreen() {
   if (!selectedLocation) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor }}>
-        <Text style={{ color: foregroundColor }}>Sijaintia ei valittu</Text>
+        <Text style={{ color: foregroundColor }}>{t('locationNotSelected')}</Text>
       </View>
     );
   }
@@ -129,7 +132,8 @@ export default function LocationDetailsScreen() {
         handleSavedUpdate={(available: boolean, ticks: boolean) => {
           setUpdatedAvailable(available);
           setUpdatedTicks(ticks);
-          setLastUpdateCreatedAt(new Date().toLocaleString('fi-FI'));
+          const locale = getLocale() === 'fi' ? 'fi-FI' : 'en-US';
+          setLastUpdateCreatedAt(new Date().toLocaleString(locale));
 
           // Update the location in context to sync with map markers
           const updatedLocations = visibleLocations.map((loc) =>
@@ -159,17 +163,17 @@ export default function LocationDetailsScreen() {
             <Text
               style={[styles.title, { color: foregroundColor }]}
               onPress={() => {
-                Alert.alert('Kohteen koordinaatit kopioitu leikepöydälle');
+                Alert.alert(t('coordinatesCopied'));
                 copyToClipboard(selectedLocation.latitude + ', ' + selectedLocation.longitude);
               }}
             >
               {selectedLocation.name}
             </Text>
             <Text style={[styles.statusText, { color: foregroundColor }]}>
-              Käytössä: {updatedAvailable ? 'Kyllä' : 'Ei'}
+              {t('inUse')}: {updatedAvailable ? t('yes') : t('no')}
             </Text>
             <Text style={[styles.statusText, { color: foregroundColor }]}>
-              Punkkeja havaittu: {updatedTicks ? 'Kyllä' : 'Ei'}
+              {t('ticksDetected')}: {updatedTicks ? t('yes') : t('no')}
             </Text>
 
             <View style={styles.updatesSection}>
@@ -179,7 +183,7 @@ export default function LocationDetailsScreen() {
                   { color: foregroundColor, marginTop: 40, marginBottom: 20 },
                 ]}
               >
-                Viimeisimmät päivitykset:
+                {t('latestUpdates')}
               </Text>
               {locationUpdates.map((locationUpdate, key) => (
                 <View style={{ marginBottom: 10 }} key={key}>
@@ -192,7 +196,9 @@ export default function LocationDetailsScreen() {
                 </View>
               ))}
               {locationUpdates.length === 0 && (
-                <Text style={[styles.updateItem, { color: foregroundColor }]}>Ei päivityksiä</Text>
+                <Text style={[styles.updateItem, { color: foregroundColor }]}>
+                  {t('noUpdates')}
+                </Text>
               )}
             </View>
           </View>
@@ -208,7 +214,7 @@ export default function LocationDetailsScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TabBarIcon name="plus" color="#8E8E8F" />
                 <Text style={{ color: '#8E8E8F', marginLeft: 8, fontWeight: '600', fontSize: 18 }}>
-                  Lisää päivitys
+                  {t('addUpdate')}
                 </Text>
               </View>
             </TouchableOpacity>

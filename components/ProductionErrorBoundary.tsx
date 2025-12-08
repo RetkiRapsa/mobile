@@ -1,6 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { t } from '@/utils/i18n';
+
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
@@ -42,12 +44,8 @@ export class ProductionErrorBoundary extends React.Component<
       // Render fallback UI
       return (
         <View style={styles.container}>
-          <Text style={styles.title}>Jokin meni pieleen</Text>
-          <Text style={styles.message}>
-            Sovellus kohtasi odottamattoman virheen.
-            {'\n\n'}
-            Sulje ja avaa sovellus uudelleen.
-          </Text>
+          <Text style={styles.title}>{t('somethingWentWrong')}</Text>
+          <Text style={styles.message}>{t('unexpectedError')}</Text>
           {__DEV__ && this.state.error && (
             <View style={styles.errorDetails}>
               <Text style={styles.errorText}>{this.state.error.toString()}</Text>
@@ -57,7 +55,7 @@ export class ProductionErrorBoundary extends React.Component<
             </View>
           )}
           <TouchableOpacity style={styles.button} onPress={this.handleReset}>
-            <Text style={styles.buttonText}>Yritä uudelleen</Text>
+            <Text style={styles.buttonText}>{t('tryAgainButton')}</Text>
           </TouchableOpacity>
         </View>
       );

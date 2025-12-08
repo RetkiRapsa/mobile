@@ -11,6 +11,7 @@ import Location from '@/types/Location';
 import LocationUpdate from '@/types/LocationUpdate';
 import { createLocationUpdate } from '@/utils/createLocationUpdate';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
+import { useTranslation } from '@/utils/i18n';
 import { devLog } from '@/utils/logger';
 
 import ScrollView = Animated.ScrollView;
@@ -46,6 +47,7 @@ export default function CreateNewLocationUpdate({
   handleClose,
   handleSavedUpdate,
 }: CreateNewLocationUpdateProps) {
+  const { t } = useTranslation();
   const { identity, setVisibleLocations } = useAppContext();
   const colorScheme = useColorScheme();
   const theme = useMemo(() => getTheme(colorScheme), [colorScheme]);
@@ -75,7 +77,7 @@ export default function CreateNewLocationUpdate({
 
   const handleSave = useCallback(async () => {
     if (!form.updateText) {
-      Alert.alert('Huomio', 'Päivitysteksti on pakollinen.');
+      Alert.alert(t('notice'), t('updateTextRequired'));
       return;
     }
 
@@ -97,7 +99,7 @@ export default function CreateNewLocationUpdate({
       devLog('Location update created:', newUpdate);
 
       if (!newUpdate.id) {
-        Alert.alert('Virhe', 'Päivitystä ei voitu tallentaa. Yritä uudelleen.');
+        Alert.alert(t('error'), t('updateSaveFailed'));
         setLoading(false);
         return;
       }
@@ -112,14 +114,14 @@ export default function CreateNewLocationUpdate({
 
       setVisibleLocations(nearby);
       setForm(defaultForm);
-      Alert.alert('Onnistui!', 'Päivityksesi on nyt lisätty kohteeseen.');
+      Alert.alert(t('success'), t('updateAdded'));
       handleSavedUpdate(form.available, form.ticks);
       handleClose();
     } catch (error) {
       console.error('Failed to create location update:', error);
 
       // Better error messages based on error type
-      let errorMessage = 'Päivitystäsi ei voitu lisätä kohteeseen. Kokeile uudelleen myöhemmin.';
+      let errorMessage = t('locationAddFailed');
 
       if (error && typeof error === 'object') {
         const err = error as any;
@@ -129,29 +131,38 @@ export default function CreateNewLocationUpdate({
           console.error('Status:', err.response.status);
 
           if (err.response.status === 401 || err.response.status === 403) {
-            errorMessage = 'Autentikointi epäonnistui. Yritä sulkea ja avata sovellus uudelleen.';
+            errorMessage = t('authenticationFailed');
           } else if (err.response.status >= 500) {
-            errorMessage = 'Palvelinvirhe. Yritä myöhemmin uudelleen.';
+            errorMessage = t('serverError');
           }
         } else if (err.request) {
           // Request made but no response
           console.error('No response received:', err.request);
-          errorMessage = 'Ei yhteyttä palvelimeen. Tarkista internetyhteytesi.';
+          errorMessage = t('noConnection');
         } else if (err.message) {
           console.error('Error message:', err.message);
         }
       }
 
-      Alert.alert('Virhe', errorMessage);
+      Alert.alert(t('error'), errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [form, identity, location, defaultForm, setVisibleLocations, handleSavedUpdate, handleClose]);
+  }, [
+    form,
+    identity,
+    location,
+    defaultForm,
+    setVisibleLocations,
+    handleSavedUpdate,
+    handleClose,
+    t,
+  ]);
 
   if (!location) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Ladataan...</Text>
+        <Text>{t('loading')}</Text>
       </View>
     );
   }
@@ -159,7 +170,7 @@ export default function CreateNewLocationUpdate({
   return (
     <ScrollView contentContainerStyle={[styles.content, { backgroundColor: theme.background }]}>
       <Text style={styles.header}>{location.name}</Text>
-      <Text style={styles.label}>Havaintosi kohteessa:</Text>
+      <Text style={styles.label}>{t('observationAtLocation')}</Text>
       <TextInput
         multiline
         style={[
@@ -175,7 +186,7 @@ export default function CreateNewLocationUpdate({
         onChangeText={(updateText) => setForm((prev) => ({ ...prev, updateText }))}
       />
       <View style={styles.switchRow}>
-        <Text style={[styles.label, { flex: 1 }]}>Kohde käytössä</Text>
+        <Text style={[styles.label, { flex: 1 }]}>{t('locationInUse')}</Text>
         <Switch
           value={form.available}
           onValueChange={(available) => setForm((prev) => ({ ...prev, available }))}
@@ -183,7 +194,7 @@ export default function CreateNewLocationUpdate({
         />
       </View>
       <View style={styles.switchRow}>
-        <Text style={[styles.label, { flex: 1 }]}>Punkkeja havaittu</Text>
+        <Text style={[styles.label, { flex: 1 }]}>{t('ticksObserved')}</Text>
         <Switch
           value={form.ticks}
           onValueChange={(ticks) => setForm((prev) => ({ ...prev, ticks }))}
@@ -195,7 +206,7 @@ export default function CreateNewLocationUpdate({
         style={[theme.button, { marginTop: 20 }]}
         onPress={handleSave}
       >
-        <Text style={{ color: theme.text }}>{loading ? 'Tallennetaan...' : 'Tallenna'}</Text>
+        <Text style={{ color: theme.text }}>{loading ? t('saving') : t('save')}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         disabled={loading}
@@ -205,7 +216,7 @@ export default function CreateNewLocationUpdate({
         ]}
         onPress={handleClose}
       >
-        <Text style={{ color: '#000000' }}>Peruuta</Text>
+        <Text style={{ color: '#000000' }}>{t('cancel')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
