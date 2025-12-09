@@ -117,7 +117,36 @@ type TranslationKey =
   | 'noConnection'
   | 'somethingWentWrong'
   | 'unexpectedError'
-  | 'tryAgainButton';
+  | 'tryAgainButton'
+  | 'loginTitle'
+  | 'loginButton'
+  | 'registerTitle'
+  | 'registerButton'
+  | 'username'
+  | 'password'
+  | 'usernamePlaceholder'
+  | 'passwordPlaceholder'
+  | 'noAccount'
+  | 'haveAccount'
+  | 'loggingIn'
+  | 'registering'
+  | 'loginError'
+  | 'registerError'
+  | 'usernameRequired'
+  | 'passwordRequired'
+  | 'passwordTooShort'
+  | 'usernameInvalidCharacters'
+  | 'logoutButton'
+  | 'loggedInAs'
+  | 'errorTimeout'
+  | 'errorNoConnection'
+  | 'errorUsernameExists'
+  | 'errorServerError'
+  | 'errorInvalidData'
+  | 'errorServiceNotFound'
+  | 'errorWrongCredentials'
+  | 'errorGenericLogin'
+  | 'errorGenericRegister';
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -211,11 +240,11 @@ const translations: { [locale: string]: Translations } = {
       '• Valitse kohteelle nimi, esim. "Iso-Melkuttimen lepakkolaavu" ja lisää kohteen tyyppi.',
     infoMissingLocationText4:
       '• Kun tiedot on täytetty, paina "Tallenna" ja uusi kohde lisätään kartalle heti jonka jälkeen voit lisätä siihen päivityksiä.',
-    infoNoRegistrationTitle: 'Ei vaadi rekisteröitymistä',
+    infoNoRegistrationTitle: 'Käyttäjätili sisällön luomiseen',
     infoNoRegistrationText1:
-      '• Sovellus ei kerää henkilötietoja. Sovelluksen asennuksen jälkeen, ensimmäisen käynnistyksen yhteydessä luodaan sinulle yksilöllinen tunniste jota käytetään kohteiden luomisen ja päivityksien tallentamisen yhteydessä. Tämä yksilöllinen tunneiste ei sisällä mitään henkilökohtaisia tietoja ja säilyy laitteellasi ainoastaan niin kauan kuin sovellus on asennettuna laitteessasi.',
+      '• Voit selata karttaa ja katsella kohteita vapaasti ilman käyttäjätiliä. Kun haluat lisätä uuden kohteen tai päivityksen, sovellus pyytää sinua kirjautumaan sisään tai luomaan käyttäjätilin.',
     infoNoRegistrationText2:
-      '• Tällä tavalla sinun ei tarvitse rekisteröityä käyttääksesi sovellusta ja voit arvioida kohteita nopeasti ja vaivatta.',
+      '• Käyttäjätunnus ja salasana säilytetään turvallisesti, ja ne mahdollistavat kohteiden ja päivitysten liittämisen sinuun. Sovellus luo lisäksi yksilöllisen tunnisteen laitteellesi, joka ei sisällä henkilökohtaisia tietoja.',
     infoTipsTitle: 'Vinkkejä käyttöön',
     infoTipsText1:
       '• Salli puhelimessasi sijainnin käyttö, jotta sovellus voi näyttää sijaintisi kartalla sinisenä pisteenä.',
@@ -263,6 +292,36 @@ const translations: { [locale: string]: Translations } = {
     unexpectedError:
       'Sovellus kohtasi odottamattoman virheen.\n\nSulje ja avaa sovellus uudelleen.',
     tryAgainButton: 'Yritä uudelleen',
+    loginTitle: 'Kirjaudu sisään',
+    loginButton: 'Kirjaudu',
+    registerTitle: 'Luo käyttäjätili',
+    registerButton: 'Rekisteröidy',
+    username: 'Käyttäjätunnus',
+    password: 'Salasana',
+    usernamePlaceholder: 'Käyttäjätunnus',
+    passwordPlaceholder: 'Salasana',
+    noAccount: 'Ei vielä tiliä?',
+    haveAccount: 'Onko sinulla jo tili?',
+    loggingIn: 'Kirjaudutaan...',
+    registering: 'Rekisteröidään...',
+    loginError: 'Kirjautuminen epäonnistui',
+    registerError: 'Rekisteröityminen epäonnistui',
+    usernameRequired: 'Käyttäjätunnus on pakollinen',
+    passwordRequired: 'Salasana on pakollinen',
+    passwordTooShort: 'Salasanan tulee olla vähintään 6 merkkiä',
+    usernameInvalidCharacters:
+      'Käyttäjätunnus voi sisältää vain kirjaimia (a-z, å, ä, ö), numeroita (0-9), viivoja (-) ja plus-merkkejä (+)',
+    logoutButton: 'Kirjaudu ulos',
+    loggedInAs: 'Kirjautunut käyttäjänä',
+    errorTimeout: 'Palvelimeen yhdistäminen aikakatkaistiin. Tarkista internet-yhteytesi.',
+    errorNoConnection: 'Ei yhteyttä palvelimeen. Tarkista internet-yhteytesi.',
+    errorUsernameExists: 'Käyttäjätunnus on jo käytössä.',
+    errorServerError: 'Palvelinvirhe. Yritä myöhemmin uudelleen.',
+    errorInvalidData: 'Virheelliset tiedot. Tarkista käyttäjätunnus ja salasana.',
+    errorServiceNotFound: 'Palvelua ei löytynyt.',
+    errorWrongCredentials: 'Väärä käyttäjätunnus tai salasana.',
+    errorGenericLogin: 'Kirjautuminen epäonnistui. Yritä uudelleen.',
+    errorGenericRegister: 'Rekisteröityminen epäonnistui. Yritä uudelleen.',
   },
   en: {
     locationNotDetermined: 'Location could not be determined',
@@ -351,11 +410,11 @@ const translations: { [locale: string]: Translations } = {
       '• Choose a name for the location, e.g. "Big Lake Bat Shelter" and add the location type.',
     infoMissingLocationText4:
       '• When the information is filled in, press "Save" and the new location will be added to the map immediately, after which you can add updates to it.',
-    infoNoRegistrationTitle: 'No registration required',
+    infoNoRegistrationTitle: 'User account for creating content',
     infoNoRegistrationText1:
-      '• The app does not collect personal information. After installing the app, a unique identifier is created for you during the first launch, which is used when creating locations and saving updates. This unique identifier does not contain any personal information and remains on your device only as long as the app is installed on your device.',
+      '• You can browse the map and view locations freely without a user account. When you want to add a new location or update, the app will ask you to log in or create a user account.',
     infoNoRegistrationText2:
-      '• This way you do not need to register to use the app and you can rate locations quickly and easily.',
+      '• Your username and password are stored securely and allow locations and updates to be associated with you. The app also creates a unique identifier for your device that does not contain any personal information.',
     infoTipsTitle: 'Tips for use',
     infoTipsText1:
       '• Allow location access on your phone so that the app can show your location on the map as a blue dot.',
@@ -402,6 +461,36 @@ const translations: { [locale: string]: Translations } = {
     somethingWentWrong: 'Something went wrong',
     unexpectedError: 'The app encountered an unexpected error.\n\nPlease close and reopen the app.',
     tryAgainButton: 'Try again',
+    loginTitle: 'Login',
+    loginButton: 'Login',
+    registerTitle: 'Create account',
+    registerButton: 'Register',
+    username: 'Username',
+    password: 'Password',
+    usernamePlaceholder: 'Username',
+    passwordPlaceholder: 'Password',
+    noAccount: "Don't have an account?",
+    haveAccount: 'Already have an account?',
+    loggingIn: 'Logging in...',
+    registering: 'Registering...',
+    loginError: 'Login failed',
+    registerError: 'Registration failed',
+    usernameRequired: 'Username is required',
+    passwordRequired: 'Password is required',
+    passwordTooShort: 'Password must be at least 6 characters',
+    usernameInvalidCharacters:
+      'Username can only contain letters (a-z, å, ä, ö), numbers (0-9), hyphens (-) and plus signs (+)',
+    logoutButton: 'Logout',
+    loggedInAs: 'Logged in as',
+    errorTimeout: 'Connection to server timed out. Check your internet connection.',
+    errorNoConnection: 'No connection to server. Check your internet connection.',
+    errorUsernameExists: 'Username is already taken.',
+    errorServerError: 'Server error. Please try again later.',
+    errorInvalidData: 'Invalid data. Check your username and password.',
+    errorServiceNotFound: 'Service not found.',
+    errorWrongCredentials: 'Wrong username or password.',
+    errorGenericLogin: 'Login failed. Please try again.',
+    errorGenericRegister: 'Registration failed. Please try again.',
   },
 };
 

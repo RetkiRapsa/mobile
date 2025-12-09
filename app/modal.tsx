@@ -3,8 +3,10 @@ import { Alert, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 
 
 import * as Clipboard from 'expo-clipboard';
 
+import { useAppContext } from '@/app/_layout';
 import LanguageSelector from '@/components/LanguageSelector';
 import colors from '@/constants/Colors';
+import { logoutUser } from '@/utils/auth';
 import { useTranslation } from '@/utils/i18n';
 import getOrCreateUUID from '@/utils/identity';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +21,7 @@ const Separator: React.FC = () => (
 
 export default function InstructionsScreen() {
   const { t } = useTranslation();
+  const { username, setIsAuthenticated, setUsername } = useAppContext();
   const backgroundColor =
     useColorScheme() === 'dark' ? colors.dark.background : colors.light.background;
   const foregroundColor = useColorScheme() === 'dark' ? colors.dark.text : colors.light.text;
@@ -35,6 +38,16 @@ export default function InstructionsScreen() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      setIsAuthenticated(false);
+      setUsername(null);
+    } catch (error) {
+      Alert.alert(t('error'), t('unexpectedError'));
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: backgroundColor }]}>
       <Text style={[styles.title, { color: foregroundColor }]}>RetkiRapsa</Text>
@@ -46,6 +59,17 @@ export default function InstructionsScreen() {
       </Text>
       <Text style={{ color: foregroundColor }}>Artur Gajewski</Text>
       <Separator />
+      {username && (
+        <>
+          <Text style={{ color: foregroundColor, marginBottom: 5 }}>
+            {t('loggedInAs')}: {username}
+          </Text>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>{t('logoutButton')}</Text>
+          </TouchableOpacity>
+          <Separator />
+        </>
+      )}
       <LanguageSelector />
       <Separator />
       <Text style={{ color: foregroundColor }}>
@@ -64,6 +88,14 @@ export default function InstructionsScreen() {
               <Ionicons name="copy-outline" size={20} color={foregroundColor} />
             </TouchableOpacity>
           </View>
+        </>
+      )}
+      {username && (
+        <>
+          <Text style={{ color: foregroundColor, marginTop: 20 }}>{t('username')}</Text>
+          <Text style={{ color: foregroundColor, marginTop: 5, fontWeight: '600' }}>
+            {username}
+          </Text>
         </>
       )}
       <Separator />
@@ -92,5 +124,17 @@ const styles = StyleSheet.create({
     marginVertical: 30,
     height: 1,
     width: '80%',
+  },
+  logoutButton: {
+    backgroundColor: '#d32f2f',
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginTop: 10,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

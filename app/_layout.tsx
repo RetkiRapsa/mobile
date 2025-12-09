@@ -45,10 +45,18 @@ type SelectedLocationContextType = {
   setSelectedLocation: React.Dispatch<React.SetStateAction<Location | null>>;
 };
 
+type AuthContextType = {
+  isAuthenticated: boolean;
+  setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
+  username: string | null;
+  setUsername: React.Dispatch<React.SetStateAction<string | null>>;
+};
+
 type AppContextType = SplashInfoContextType &
   IdentityContextType &
   VisibleLocationsContextType &
-  SelectedLocationContextType;
+  SelectedLocationContextType &
+  AuthContextType;
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -65,12 +73,37 @@ function AppProvider({ children }: { children: React.ReactNode }) {
   const [identity, setIdentity] = useState<string | undefined>(undefined);
   const [visibleLocations, setVisibleLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [username, setUsername] = useState<string | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
 
   // Load saved language preference on app start
   useEffect(() => {
     loadSavedLocale().catch((error) => {
       console.error('Failed to load saved locale:', error);
     });
+  }, []);
+
+  // Check authentication status on app start
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { isAuthenticated: authStatus, getStoredUsername } = await import('@/utils/auth');
+        const authenticated = await authStatus();
+        setIsAuthenticated(authenticated);
+
+        if (authenticated) {
+          const storedUsername = await getStoredUsername();
+          setUsername(storedUsername);
+        }
+      } catch (error) {
+        console.error('[Auth] Failed to check authentication:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+    checkAuth();
   }, []);
 
   useEffect(() => {
@@ -110,9 +143,26 @@ function AppProvider({ children }: { children: React.ReactNode }) {
         setVisibleLocations,
         selectedLocation,
         setSelectedLocation,
+        isAuthenticated,
+        setIsAuthenticated,
+        username,
+        setUsername,
       }}
     >
-      {children}
+      {isCheckingAuth ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#fff',
+          }}
+        >
+          <ActivityIndicator size="large" color="#2e7d32" />
+        </View>
+      ) : (
+        children
+      )}
     </AppContext.Provider>
   );
 }
@@ -120,6 +170,7 @@ function AppProvider({ children }: { children: React.ReactNode }) {
 function RootLayoutNav({ children }: { children?: React.ReactNode }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
+
   return (
     <ProductionErrorBoundary>
       <AppProvider>

@@ -1,0 +1,28 @@
+#!/bin/bash
+# Script to help test the authentication flow
+
+echo "RetkiRapsa - Clear Authentication Data"
+echo "========================================"
+echo ""
+echo "To test the login screen, you need to clear stored authentication data."
+echo ""
+echo "Options:"
+echo "1. If using Expo Go, uninstall and reinstall the app"
+echo "2. If using development build, use the following commands:"
+echo ""
+echo "For iOS Simulator:"
+echo "  npx expo start --clear"
+echo "  Then press 'i' to open iOS simulator"
+echo "  In the app, go to About/Tietoa and tap 'Kirjaudu ulos'"
+echo ""
+echo "For Android Emulator:"
+echo "  npx expo start --clear"
+echo "  Then press 'a' to open Android emulator"
+echo "  In the app, go to About/Tietoa and tap 'Kirjaudu ulos'"
+echo ""
+echo "For Physical Device:"
+echo "  1. Clear app data through device settings, OR"
+echo "  2. Open the app and logout from About/Tietoa page"
+echo ""
+echo "After clearing data, you should see the login screen on next launch."
+

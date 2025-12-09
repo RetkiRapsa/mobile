@@ -6,12 +6,14 @@ export default async function createLocation({
   latitude,
   longitude,
   device,
+  username,
 }: {
   name: string;
   type: string;
   latitude: number | undefined;
   longitude: number | undefined;
   device: string;
+  username: string | null;
 }) {
   const { data } = await apiCreateLocation({
     name,
@@ -19,6 +21,7 @@ export default async function createLocation({
     latitude,
     longitude,
     device,
+    username,
   });
 
   return data;

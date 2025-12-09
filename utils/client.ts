@@ -1,12 +1,28 @@
 import axios, { AxiosError } from 'axios';
 
-import { clearToken, getValidToken, registerDeviceAndGetToken } from './auth';
+import { clearToken, getValidToken } from './auth';
 import { devLog, logError } from './logger';
 
 const RETKIRAPSA_API_DOMAIN = process.env.EXPO_PUBLIC_RETKIRAPSA_API_DOMAIN || 'localhost';
-const API_URL = `https://${RETKIRAPSA_API_DOMAIN}/locations`;
+// Use HTTP for localhost and local IP addresses, HTTPS for production domains
+const isLocalDevelopment =
+  RETKIRAPSA_API_DOMAIN.includes('localhost') ||
+  RETKIRAPSA_API_DOMAIN.match(/^\d+\.\d+\.\d+\.\d+/) ||
+  RETKIRAPSA_API_DOMAIN.includes('192.168.') ||
+  RETKIRAPSA_API_DOMAIN.includes('10.0.');
+const protocol = isLocalDevelopment ? 'http' : 'https';
+const API_URL = `${protocol}://${RETKIRAPSA_API_DOMAIN}/locations`;
 const REQUEST_TIMEOUT = 15000; // 15 seconds
 const MAX_RETRIES = 2;
+
+// Log the API configuration on startup
+devLog('API Client configured:', {
+  domain: RETKIRAPSA_API_DOMAIN,
+  protocol,
+  isLocalDevelopment,
+  baseURL: API_URL,
+  timeout: REQUEST_TIMEOUT,
+});
 
 const api = axios.create({
   baseURL: API_URL,
@@ -66,16 +82,60 @@ api.interceptors.request.use(async (config) => {
     config.method === 'delete' ||
     config.method === 'patch';
 
+  devLog('=== REQUEST INTERCEPTOR ===');
+  devLog('Method:', config.method?.toUpperCase());
+  devLog('URL:', config.url);
+  devLog('Base URL:', config.baseURL);
+  devLog('Full URL:', `${config.baseURL}${config.url}`);
+  devLog('Is write operation:', isWrite);
+
   if (isWrite) {
     try {
       const token = await getValidToken();
-      config.headers.Authorization = `Bearer ${token}`;
+      devLog('Token retrieved:', token ? 'YES' : 'NO');
+      if (token) {
+        devLog('Token (first 30 chars):', token.substring(0, 30) + '...');
+        devLog('Token length:', token.length);
+      }
+
+      if (!token) {
+        logError('ERROR: No token available for write operation');
+        return Promise.reject(new Error('Autentikointi puuttuu. Kirjaudu sisään.'));
+      }
+
+      // Ensure headers object exists and properly set Authorization
+      if (!config.headers) {
+        config.headers = {} as any;
+      }
+      config.headers['Authorization'] = `Bearer ${token}`;
+
+      devLog('Authorization header set:', config.headers['Authorization'] ? 'YES' : 'NO');
+      devLog(
+        'Authorization header (first 50 chars):',
+        config.headers['Authorization']?.substring(0, 50) + '...'
+      );
+
+      // Log the payload
+      if (config.data) {
+        devLog(
+          'Request payload:',
+          typeof config.data === 'string' ? config.data : JSON.stringify(config.data)
+        );
+      }
+
+      // Log all headers (without full token for security)
+      const headersForLog = { ...config.headers };
+      if (headersForLog['Authorization']) {
+        headersForLog['Authorization'] = 'Bearer [TOKEN_PRESENT]';
+      }
+      devLog('All headers:', JSON.stringify(headersForLog));
     } catch (error) {
       logError('Failed to get auth token:', error);
       return Promise.reject(new Error('Autentikointi epäonnistui'));
     }
   }
 
+  devLog('=== END REQUEST INTERCEPTOR ===');
   return config;
 });
 
@@ -90,6 +150,8 @@ api.interceptors.response.use(
       logError('Network error - no response received:', {
         message: error.message,
         url: originalRequest?.url,
+        baseURL: originalRequest?.baseURL,
+        fullURL: originalRequest?.baseURL + originalRequest?.url,
         method: originalRequest?.method,
         code: error.code,
       });
@@ -97,31 +159,36 @@ api.interceptors.response.use(
       logError('API error:', {
         status: error.response.status,
         url: originalRequest?.url,
+        baseURL: originalRequest?.baseURL,
+        fullURL: originalRequest?.baseURL + originalRequest?.url,
         method: originalRequest?.method,
         data: error.response.data,
       });
     }
 
-    // If we get 403 and haven't already retried
-    if (error.response?.status === 403 && !originalRequest._retry) {
-      devLog('Got 403, attempting to refresh token and retry...');
-      originalRequest._retry = true;
+    // If we get 403, authentication failed - user needs to login
+    if (error.response?.status === 403) {
+      devLog('=== GOT 403 FORBIDDEN ===');
+      devLog('Request that failed:');
+      devLog('  Method:', originalRequest?.method?.toUpperCase());
+      devLog('  URL:', originalRequest?.url);
+      devLog('  Base URL:', originalRequest?.baseURL);
+      devLog('  Full URL:', originalRequest?.baseURL + originalRequest?.url);
 
-      try {
-        // Clear the old token and get a new one
-        await clearToken();
-        const newToken = await registerDeviceAndGetToken();
-
-        // Update the request with the new token
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
-        // Retry the request
-        devLog('Retrying request with new token...');
-        return api(originalRequest);
-      } catch (refreshError) {
-        logError('Failed to refresh token:', refreshError);
-        return Promise.reject(new Error('Autentikointi epäonnistui. Yritä uudelleen.'));
+      // Check if Authorization header was present in the failed request
+      const hadAuthHeader = originalRequest?.headers?.['Authorization'];
+      devLog('  Had Authorization header:', hadAuthHeader ? 'YES' : 'NO');
+      if (hadAuthHeader) {
+        devLog('  Authorization header (first 50 chars):', hadAuthHeader.substring(0, 50) + '...');
       }
+
+      devLog('  Payload:', originalRequest?.data);
+      devLog('  Response data:', error.response.data);
+
+      devLog('Clearing token from storage due to 403...');
+      await clearToken();
+      devLog('=== END 403 HANDLING ===');
+      // Let the error propagate so the app can show login screen
     }
 
     // Retry logic for retryable errors

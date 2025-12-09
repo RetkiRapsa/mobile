@@ -1,13 +1,18 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Animated, StyleSheet, TextInput, TouchableOpacity, useColorScheme } from 'react-native';
-
-
+import {
+  Alert,
+  Animated,
+  Modal,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+} from 'react-native';
 
 import { useRouter } from 'expo-router';
 
-
-
 import { useAppContext } from '@/app/_layout';
+import AuthScreen from '@/components/AuthScreen';
 import { Text, View } from '@/components/Themed';
 import colors from '@/constants/Colors';
 import Location from '@/types/Location';
@@ -30,8 +35,6 @@ enum LocationTypeEnum {
   PARKING = 'PARKING',
   OTHER = 'OTHER',
 }
-
-// Type options will be localized in the component
 
 const getIconName = (type: string) => {
   switch (type) {
@@ -57,7 +60,15 @@ const getIconName = (type: string) => {
 export default function CreateNewLocationScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { identity, visibleLocations, setVisibleLocations } = useAppContext();
+  const {
+    identity,
+    visibleLocations,
+    setVisibleLocations,
+    isAuthenticated,
+    setIsAuthenticated,
+    username,
+    setUsername,
+  } = useAppContext();
   const colorScheme = useColorScheme();
 
   const [form, setForm] = useState({
@@ -68,6 +79,7 @@ export default function CreateNewLocationScreen() {
     device: undefined as string | undefined,
   });
   const [loading, setLoading] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Localized type options
   const typeOptions = useMemo(
@@ -117,42 +129,53 @@ export default function CreateNewLocationScreen() {
   );
 
   // Save handler
-  const handleSave = useCallback(async () => {
-    if (!form.type || !form.name) {
-      Alert.alert(t('notice'), t('requiredFields'));
-      return;
-    }
-    setLoading(true);
-    const location = await getCurrentGpsLocation();
-    if (!location) {
-      Alert.alert(t('error'), t('locationNotLocated'));
-      setLoading(false);
-      return;
-    }
-    try {
-      const newLocation: Location = await createNewLocation({
-        ...form,
-        longitude: location.longitude,
-        latitude: location.latitude,
-        device: identity || 'unknown',
-      });
-      if (newLocation.id) {
-        setForm({
-          type: '',
-          name: '',
-          longitude: undefined,
-          latitude: undefined,
-          device: undefined,
-        });
-        setVisibleLocations([...(visibleLocations || []), newLocation]);
-        Alert.alert(`${newLocation.name} ${t('locationAdded')}`);
-        router.navigate('/');
+  const handleSave = useCallback(
+    async (skipAuthCheck = false) => {
+      if (!form.type || !form.name) {
+        Alert.alert(t('notice'), t('requiredFields'));
+        return;
       }
-    } catch {
-      Alert.alert(t('error'), t('locationAddFailed'));
-    }
-    setLoading(false);
-  }, [form, identity, visibleLocations, setVisibleLocations, router]);
+
+      // Check authentication before proceeding (unless we're retrying after auth)
+      if (!skipAuthCheck && !isAuthenticated) {
+        setShowAuthModal(true);
+        return;
+      }
+
+      setLoading(true);
+      const location = await getCurrentGpsLocation();
+      if (!location) {
+        Alert.alert(t('error'), t('locationNotLocated'));
+        setLoading(false);
+        return;
+      }
+      try {
+        const newLocation: Location = await createNewLocation({
+          ...form,
+          longitude: location.longitude,
+          latitude: location.latitude,
+          device: identity || 'unknown',
+          username: username,
+        });
+        if (newLocation.id) {
+          setForm({
+            type: '',
+            name: '',
+            longitude: undefined,
+            latitude: undefined,
+            device: undefined,
+          });
+          setVisibleLocations([...(visibleLocations || []), newLocation]);
+          Alert.alert(`${newLocation.name} ${t('locationAdded')}`);
+          router.navigate('/');
+        }
+      } catch {
+        Alert.alert(t('error'), t('locationAddFailed'));
+      }
+      setLoading(false);
+    },
+    [form, identity, visibleLocations, setVisibleLocations, router, isAuthenticated, username, t]
+  );
 
   // Render
   return (
@@ -196,10 +219,33 @@ export default function CreateNewLocationScreen() {
       <TouchableOpacity
         disabled={loading}
         style={[theme.button, { marginTop: 10 }]}
-        onPress={handleSave}
+        onPress={() => handleSave()}
       >
         <Text style={{ color: theme.text }}>{loading ? t('loadingData') : t('save')}</Text>
       </TouchableOpacity>
+
+      {/* Authentication Modal */}
+      <Modal
+        visible={showAuthModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowAuthModal(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
+          <AuthScreen
+            onAuthSuccess={(username) => {
+              setIsAuthenticated(true);
+              setUsername(username);
+              setShowAuthModal(false);
+              // Retry save after authentication - skip auth check since we just authenticated
+              handleSave(true);
+            }}
+          />
+          <TouchableOpacity style={styles.closeButton} onPress={() => setShowAuthModal(false)}>
+            <Text style={styles.closeButtonText}>{t('cancel')}</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -266,5 +312,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: '#d32f2f',
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
