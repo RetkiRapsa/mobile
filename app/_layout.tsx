@@ -9,6 +9,11 @@ import { ProductionErrorBoundary } from '@/components/ProductionErrorBoundary';
 import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import Location from '@/types/Location';
+import {
+  isAuthenticated as checkAuthentication,
+  clearToken,
+  getStoredUsername,
+} from '@/utils/auth';
 import { loadSavedLocale, useTranslation } from '@/utils/i18n';
 import getOrCreateUUID from '@/utils/identity';
 import { splashInfoSeen } from '@/utils/splashInfo';
@@ -88,8 +93,7 @@ function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { isAuthenticated: authStatus, getStoredUsername } = await import('@/utils/auth');
-        const authenticated = await authStatus();
+        const authenticated = await checkAuthentication();
 
         if (authenticated) {
           const storedUsername = await getStoredUsername();
@@ -104,7 +108,6 @@ function AppProvider({ children }: { children: React.ReactNode }) {
             setIsAuthenticated(false);
             setUsername(null);
             // Clear the orphaned token
-            const { clearToken } = await import('@/utils/auth');
             await clearToken();
           }
         } else {
