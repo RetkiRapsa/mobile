@@ -544,14 +544,28 @@ export function getLocale(): 'fi' | 'en' {
 export async function loadSavedLocale(): Promise<'fi' | 'en'> {
   try {
     const savedLocale = await SecureStore.getItemAsync(LANGUAGE_KEY);
+    console.log('[i18n] Loading saved locale:', savedLocale || 'none (will use default)');
+
     if (savedLocale === 'en' || savedLocale === 'fi') {
-      currentLocale = savedLocale;
+      // Use setLocale to properly notify listeners, but don't save again
+      if (currentLocale !== savedLocale) {
+        console.log('[i18n] Setting locale to saved value:', savedLocale);
+        currentLocale = savedLocale;
+        // Notify all listeners to trigger re-renders
+        listeners.forEach((listener) => listener(savedLocale));
+      }
       return savedLocale;
     }
   } catch (error) {
     console.error('Failed to load language preference:', error);
   }
-  // Default to Finnish
+
+  // Default to Finnish - also notify listeners
+  console.log('[i18n] No saved locale found, using default: fi');
+  if (currentLocale !== 'fi') {
+    currentLocale = 'fi';
+    listeners.forEach((listener) => listener('fi'));
+  }
   return 'fi';
 }
 
