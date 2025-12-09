@@ -179,7 +179,7 @@ const translations: { [locale: string]: Translations } = {
     copied: 'Kopioitu',
     deviceIdCopied: 'Tunniste kopioitu leikepöydälle',
     privacyNotice:
-      'RetkiRapsa ei kerää tai lähetä käyttäjätietoja mihinkään palveluun. Sovellus käyttää laitteesi sijaintia vain kartan näyttämiseen ja kohteiden näyttämiseen. Ensimmäisen käynnistyksen yhteydessä luodaan yksilöllinen tunniste jota käytetään raporttien tallentamisen yhteydessä.',
+      'RetkiRapsa ei kerää tai lähetä käyttäjätietoja mihinkään palveluun. Sovellus käyttää laitteesi sijaintia vain kartan näyttämiseen ja kohteiden näyttämiseen.',
     tabMap: 'Kartta',
     tabNew: 'Uusi',
     tabInfo: 'Ohjeet',
@@ -349,7 +349,7 @@ const translations: { [locale: string]: Translations } = {
     copied: 'Copied',
     deviceIdCopied: 'Device ID copied to clipboard',
     privacyNotice:
-      'RetkiRapsa does not collect or send user data to any service. The app uses your device location only for displaying the map and showing locations. A unique identifier is created on first launch and is used when saving reports.',
+      'RetkiRapsa does not collect or send user data to any service. The app uses your device location only for displaying the map and showing locations.',
     tabMap: 'Map',
     tabNew: 'New',
     tabInfo: 'Info',

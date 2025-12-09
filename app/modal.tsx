@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+} from 'react-native';
 
 import * as Clipboard from 'expo-clipboard';
 
@@ -49,7 +57,7 @@ export default function InstructionsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: backgroundColor }]}>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: backgroundColor }]}>
       <Text style={[styles.title, { color: foregroundColor }]}>RetkiRapsa</Text>
       <Text style={{ color: foregroundColor }}>
         {t('version')} {appConfig.expo.version}
@@ -77,27 +85,6 @@ export default function InstructionsScreen() {
           ? t('poweredByVPS')
           : t('developmentVersion')}
       </Text>
-      {deviceId && (
-        <>
-          <Text style={{ color: foregroundColor, marginTop: 20 }}>{t('deviceId')}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
-            <Text style={{ color: foregroundColor, marginRight: 10 }}>{deviceId}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
-            <TouchableOpacity onPress={copyToClipboard}>
-              <Ionicons name="copy-outline" size={20} color={foregroundColor} />
-            </TouchableOpacity>
-          </View>
-        </>
-      )}
-      {username && (
-        <>
-          <Text style={{ color: foregroundColor, marginTop: 20 }}>{t('username')}</Text>
-          <Text style={{ color: foregroundColor, marginTop: 5, fontWeight: '600' }}>
-            {username}
-          </Text>
-        </>
-      )}
       <Separator />
       <View style={{ marginTop: 20, marginBottom: 20, width: '80%' }}>
         <Text
@@ -106,15 +93,17 @@ export default function InstructionsScreen() {
           {t('privacyNotice')}
         </Text>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 20,
