@@ -1,13 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  useColorScheme,
-} from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import * as Clipboard from 'expo-clipboard';
 
@@ -32,11 +24,10 @@ function TabBarIcon(props: {
 
 export default function LocationDetailsScreen() {
   const { t } = useTranslation();
-  const backgroundColor =
-    useColorScheme() === 'dark' ? colors.dark.background : colors.light.background;
-  const footerBackgroundColor = useColorScheme() === 'dark' ? '#131313' : '#ffffff';
-  const footerBorderColor = useColorScheme() === 'dark' ? '#131313' : '#cccccc';
-  const foregroundColor = useColorScheme() === 'dark' ? colors.dark.text : colors.light.text;
+  const backgroundColor = colors.light.background;
+  const footerBackgroundColor = '#ffffff';
+  const footerBorderColor = '#cccccc';
+  const foregroundColor = colors.light.text;
   const [locationUpdates, setLocationUpdates] = useState<LocationUpdate[]>([]);
   const [addLocationUpdate, setAddLocationUpdate] = useState(false);
   const [updatedAvailable, setUpdatedAvailable] = useState(false);
@@ -86,6 +77,7 @@ export default function LocationDetailsScreen() {
               updateText: string;
               device: string;
               created: string;
+              username?: string;
             }) => {
               const locale = getLocale() === 'fi' ? 'fi-FI' : 'en-US';
               const createdAt = new Date(update.created).toLocaleString(locale);
@@ -95,6 +87,7 @@ export default function LocationDetailsScreen() {
                 updateText: update.updateText,
                 device: update.device,
                 created: createdAt,
+                username: update.username,
               };
             }
           )
@@ -186,19 +179,44 @@ export default function LocationDetailsScreen() {
                 {t('latestUpdates')}
               </Text>
               {locationUpdates.map((locationUpdate, key) => (
-                <View style={{ marginBottom: 10 }} key={key}>
-                  <Text style={[styles.updateItem, { color: foregroundColor }]}>
-                    {locationUpdate.created}
-                  </Text>
-                  <Text style={[styles.updateItem, { color: foregroundColor }]}>
+                <View
+                  key={key}
+                  style={[
+                    styles.updateCard,
+                    {
+                      backgroundColor: '#F5F5F5',
+                      borderLeftColor: '#2e7d32',
+                    },
+                  ]}
+                >
+                  <View style={styles.updateHeader}>
+                    <View style={styles.avatarCircle}>
+                      <Text style={styles.avatarText}>
+                        {locationUpdate.username
+                          ? locationUpdate.username.charAt(0).toUpperCase()
+                          : '?'}
+                      </Text>
+                    </View>
+                    <View style={styles.updateMeta}>
+                      <Text style={[styles.username, { color: foregroundColor }]}>
+                        {locationUpdate.username || 'Anonymous'}
+                      </Text>
+                      <Text style={[styles.timestamp, { color: '#6C6C70' }]}>
+                        {locationUpdate.created}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.updateMessage, { color: foregroundColor }]}>
                     {locationUpdate.updateText}
                   </Text>
                 </View>
               ))}
               {locationUpdates.length === 0 && (
-                <Text style={[styles.updateItem, { color: foregroundColor }]}>
-                  {t('noUpdates')}
-                </Text>
+                <View style={[styles.emptyState, { backgroundColor: '#F5F5F5' }]}>
+                  <Text style={[styles.emptyStateText, { color: '#6C6C70' }]}>
+                    {t('noUpdates')}
+                  </Text>
+                </View>
               )}
             </View>
           </View>
@@ -251,6 +269,61 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 20,
     lineHeight: 30,
+  },
+  updateCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  updateHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  avatarCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2e7d32',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  updateMeta: {
+    flex: 1,
+  },
+  username: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  timestamp: {
+    fontSize: 12,
+  },
+  updateMessage: {
+    fontSize: 15,
+    lineHeight: 22,
+    paddingLeft: 52,
+  },
+  emptyState: {
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateText: {
+    fontSize: 15,
+    fontStyle: 'italic',
   },
   updateItem: {
     fontSize: 14,

@@ -7,7 +7,6 @@ import {
   Switch,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
 } from 'react-native';
 
 import { useAppContext } from '@/app/_layout';
@@ -32,12 +31,11 @@ interface FormState {
   device: string;
 }
 
-const getTheme = (colorScheme: string | null | undefined) => ({
-  background: colorScheme === 'dark' ? colors.dark.background : colors.light.background,
-  text: colorScheme === 'dark' ? colors.dark.text : colors.light.text,
-  inputBackground:
-    colorScheme === 'dark' ? colors.dark.inputBackground : colors.light.inputBackground,
-  button: colorScheme === 'dark' ? styles.buttonDarkMode : styles.buttonLightMode,
+const getTheme = () => ({
+  background: colors.light.background,
+  text: colors.light.text,
+  inputBackground: colors.light.inputBackground,
+  button: styles.buttonLightMode,
 });
 
 type CreateNewLocationUpdateProps = {
@@ -64,8 +62,7 @@ export default function CreateNewLocationUpdate({
     username,
     setUsername,
   } = useAppContext();
-  const colorScheme = useColorScheme();
-  const theme = useMemo(() => getTheme(colorScheme), [colorScheme]);
+  const theme = useMemo(() => getTheme(), []);
 
   const defaultForm: FormState = useMemo(
     () => ({

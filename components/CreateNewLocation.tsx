@@ -1,13 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import {
-  Alert,
-  Animated,
-  Modal,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  useColorScheme,
-} from 'react-native';
+import { Alert, Animated, Modal, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 
 import { useRouter } from 'expo-router';
 
@@ -69,7 +61,6 @@ export default function CreateNewLocationScreen() {
     username,
     setUsername,
   } = useAppContext();
-  const colorScheme = useColorScheme();
 
   const [form, setForm] = useState({
     type: '',
@@ -98,14 +89,13 @@ export default function CreateNewLocationScreen() {
 
   const theme = useMemo(
     () => ({
-      background: colorScheme === 'dark' ? colors.dark.background : colors.light.background,
-      text: colorScheme === 'dark' ? colors.dark.text : colors.light.text,
-      inputBackground:
-        colorScheme === 'dark' ? colors.dark.inputBackground : colors.light.inputBackground,
-      icon: colorScheme === 'dark' ? colors.dark.iconColor : colors.light.iconColor,
-      button: colorScheme === 'dark' ? styles.buttonDarkMode : styles.buttonLightMode,
+      background: colors.light.background,
+      text: colors.light.text,
+      inputBackground: colors.light.inputBackground,
+      icon: colors.light.iconColor,
+      button: styles.buttonLightMode,
     }),
-    [colorScheme]
+    []
   );
 
   // Warn if nearby locations exist
