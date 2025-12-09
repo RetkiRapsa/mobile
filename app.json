@@ -22,7 +22,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.agasofta.RetkiRapsa",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "RetkiRapsa uses your location to show nearby hiking spots and to attach accurate coordinates to your reviews. For example, we use your location to display the closest resting places on the map.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "RetkiRapsa uses your location to show nearby hiking spots and to attach accurate coordinates to your reviews. For example, we use your location to display the closest resting places on the map."
       },
       "icon": "./assets/images/icon.png"
     },
