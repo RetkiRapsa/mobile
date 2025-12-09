@@ -20,6 +20,7 @@ import { createLocationUpdate } from '@/utils/createLocationUpdate';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
 import { useTranslation } from '@/utils/i18n';
 import { devLog } from '@/utils/logger';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import ScrollView = Animated.ScrollView;
 
@@ -193,55 +194,88 @@ export default function CreateNewLocationUpdate({
 
   return (
     <ScrollView contentContainerStyle={[styles.content, { backgroundColor: theme.background }]}>
-      <Text style={styles.header}>{location.name}</Text>
-      <Text style={styles.label}>{t('observationAtLocation')}</Text>
-      <TextInput
-        multiline
-        style={[
-          styles.input,
-          {
-            color: theme.text,
-            borderWidth: 2,
-            borderColor: theme.text,
-            backgroundColor: theme.inputBackground,
-          },
-        ]}
-        value={form.updateText}
-        onChangeText={(updateText) => setForm((prev) => ({ ...prev, updateText }))}
-      />
-      <View style={styles.switchRow}>
-        <Text style={[styles.label, { flex: 1 }]}>{t('locationInUse')}</Text>
-        <Switch
-          value={form.available}
-          onValueChange={(available) => setForm((prev) => ({ ...prev, available }))}
-          style={{ marginLeft: 10 }}
+      {/* Header Card */}
+      <View style={styles.headerCard}>
+        <MaterialCommunityIcons name="map-marker" size={24} color="#2e7d32" />
+        <View style={styles.headerContent}>
+          <Text style={styles.locationName}>{location.name}</Text>
+        </View>
+      </View>
+
+      {/* Update Text Card */}
+      <View style={styles.inputCard}>
+        <Text style={styles.sectionLabel}>{t('observationAtLocation')}</Text>
+        <TextInput
+          multiline
+          numberOfLines={6}
+          style={[styles.textArea, { color: theme.text }]}
+          value={form.updateText}
+          onChangeText={(updateText) => setForm((prev) => ({ ...prev, updateText }))}
+          placeholder={t('observationAtLocation')}
+          placeholderTextColor="#A0A0A0"
         />
       </View>
-      <View style={styles.switchRow}>
-        <Text style={[styles.label, { flex: 1 }]}>{t('ticksObserved')}</Text>
-        <Switch
-          value={form.ticks}
-          onValueChange={(ticks) => setForm((prev) => ({ ...prev, ticks }))}
-          style={{ marginLeft: 10 }}
-        />
+
+      {/* Status Toggles Card */}
+      <View style={styles.togglesCard}>
+        <Text style={styles.sectionLabel}>Status</Text>
+
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleContent}>
+            <View style={styles.toggleHeader}>
+              <MaterialCommunityIcons
+                name="checkbox-marked-circle"
+                size={24}
+                color={form.available ? '#2e7d32' : '#9E9E9E'}
+              />
+              <Text style={styles.toggleLabel}>{t('locationInUse')}</Text>
+            </View>
+            <Text style={styles.toggleStatus}>{form.available ? t('yes') : t('no')}</Text>
+          </View>
+          <Switch
+            value={form.available}
+            onValueChange={(available) => setForm((prev) => ({ ...prev, available }))}
+            trackColor={{ false: '#D1D1D6', true: '#a5d6a7' }}
+            thumbColor={form.available ? '#2e7d32' : '#f4f3f4'}
+            ios_backgroundColor="#D1D1D6"
+          />
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.toggleRow}>
+          <View style={styles.toggleContent}>
+            <View style={styles.toggleHeader}>
+              <MaterialCommunityIcons
+                name="bug"
+                size={24}
+                color={form.ticks ? '#2e7d32' : '#9E9E9E'}
+              />
+              <Text style={styles.toggleLabel}>{t('ticksObserved')}</Text>
+            </View>
+            <Text style={styles.toggleStatus}>{form.ticks ? t('yes') : t('no')}</Text>
+          </View>
+          <Switch
+            value={form.ticks}
+            onValueChange={(ticks) => setForm((prev) => ({ ...prev, ticks }))}
+            trackColor={{ false: '#D1D1D6', true: '#a5d6a7' }}
+            thumbColor={form.ticks ? '#2e7d32' : '#f4f3f4'}
+            ios_backgroundColor="#D1D1D6"
+          />
+        </View>
       </View>
+
+      {/* Action Buttons */}
       <TouchableOpacity
         disabled={loading}
-        style={[theme.button, { marginTop: 20 }]}
+        style={[styles.saveButton, { opacity: loading ? 0.6 : 1 }]}
         onPress={() => handleSave()}
       >
-        <Text style={{ color: theme.text }}>{loading ? t('saving') : t('save')}</Text>
+        <Text style={styles.saveButtonText}>{loading ? t('saving') : t('save')}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        disabled={loading}
-        style={[
-          theme.button,
-          { marginTop: 20, backgroundColor: '#eca5a5', borderColor: '#d32f2f', borderWidth: 2 },
-        ]}
-        onPress={handleClose}
-      >
-        <Text style={{ color: '#000000' }}>{t('cancel')}</Text>
+      <TouchableOpacity disabled={loading} style={styles.cancelButton} onPress={handleClose}>
+        <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
       </TouchableOpacity>
 
       {/* Authentication Modal */}
@@ -272,9 +306,142 @@ export default function CreateNewLocationUpdate({
 
 const styles = StyleSheet.create({
   content: {
-    padding: 25,
-    paddingTop: 40,
+    padding: 20,
+    paddingTop: 20,
     flexGrow: 1,
+  },
+  headerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2e7d32',
+  },
+  headerContent: {
+    flex: 1,
+    marginLeft: 12,
+    backgroundColor: 'transparent',
+  },
+  locationName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#2e7d32',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#2e7d32',
+    fontWeight: '500',
+  },
+  inputCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  sectionLabel: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 12,
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    minHeight: 120,
+    textAlignVertical: 'top',
+    backgroundColor: '#F5F5F5',
+  },
+  togglesCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    backgroundColor: 'transparent',
+  },
+  toggleContent: {
+    flex: 1,
+    marginRight: 16,
+    backgroundColor: 'transparent',
+  },
+  toggleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    backgroundColor: 'transparent',
+  },
+  toggleLabel: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 8,
+  },
+  toggleStatus: {
+    fontSize: 14,
+    color: '#6C6C70',
+    marginLeft: 32,
+    fontWeight: '500',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E5EA',
+    marginVertical: 12,
+  },
+  saveButton: {
+    backgroundColor: '#2e7d32',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#2e7d32',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#d32f2f',
+    marginBottom: 20,
+  },
+  cancelButtonText: {
+    color: '#d32f2f',
+    fontSize: 18,
+    fontWeight: '600',
   },
   header: {
     fontSize: 20,

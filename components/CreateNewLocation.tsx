@@ -1,5 +1,13 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Animated, Modal, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import {
+  Alert,
+  Animated,
+  Modal,
+  Text as RNText,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 
 import { useRouter } from 'expo-router';
 
@@ -50,7 +58,7 @@ const getIconName = (type: string) => {
 };
 
 export default function CreateNewLocationScreen() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const {
     identity,
@@ -84,7 +92,7 @@ export default function CreateNewLocationScreen() {
       { value: LocationTypeEnum.PARKING, label: t('typeParking') },
       { value: LocationTypeEnum.OTHER, label: t('typeOther') },
     ],
-    [t]
+    [t, locale]
   );
 
   const theme = useMemo(
@@ -170,48 +178,61 @@ export default function CreateNewLocationScreen() {
   // Render
   return (
     <ScrollView contentContainerStyle={[styles.content, { backgroundColor: theme.background }]}>
-      <Text style={{ marginBottom: 30 }}>{t('gpsLocationNote')}</Text>
-      <Text style={styles.label}>{t('locationName')}:</Text>
-      <TextInput
-        style={[
-          styles.input,
-          {
-            color: theme.text,
-            borderWidth: 2,
-            borderColor: theme.text,
-            backgroundColor: theme.inputBackground,
-          },
-        ]}
-        value={form.name}
-        onChangeText={(name) => setForm((prev) => ({ ...prev, name }))}
-        placeholder={t('locationNamePlaceholder')}
-      />
-      <Text style={styles.label}>{t('locationType')}:</Text>
-      <View style={styles.typeOptionsRow}>
-        {typeOptions.map((option) => (
-          <TouchableOpacity
-            key={option.value}
-            style={[
-              styles.typeOption,
-              {
-                backgroundColor: theme.background,
-                borderColor: form.type === option.value ? theme.icon : 'transparent',
-              },
-            ]}
-            onPress={() => setForm((prev) => ({ ...prev, type: option.value }))}
-            activeOpacity={0.7}
-          >
-            <MaterialCommunityIcons name={getIconName(option.value)} size={32} color={theme.icon} />
-            <Text>{option.label}</Text>
-          </TouchableOpacity>
-        ))}
+      {/* Info Card */}
+      <View style={styles.infoCard}>
+        <MaterialCommunityIcons name="information" size={24} color="#2e7d32" />
+        <Text style={styles.infoText}>{t('gpsLocationNote')}</Text>
       </View>
+
+      {/* Name Input Card */}
+      <View style={styles.inputCard}>
+        <Text style={styles.sectionLabel}>{t('locationName')}</Text>
+        <TextInput
+          style={[styles.input, { color: theme.text, backgroundColor: '#F5F5F5' }]}
+          value={form.name}
+          onChangeText={(name) => setForm((prev) => ({ ...prev, name }))}
+          placeholder={t('locationNamePlaceholder')}
+          placeholderTextColor="#A0A0A0"
+        />
+      </View>
+
+      {/* Type Selection Card */}
+      <View style={styles.typeCard}>
+        <Text style={styles.sectionLabel}>{t('locationType')}</Text>
+        <View style={styles.typeGrid}>
+          {typeOptions.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[styles.typeOption, form.type === option.value && styles.typeOptionSelected]}
+              onPress={() => setForm((prev) => ({ ...prev, type: option.value }))}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[styles.iconCircle, form.type === option.value && styles.iconCircleSelected]}
+              >
+                <MaterialCommunityIcons
+                  name={getIconName(option.value)}
+                  size={28}
+                  color={form.type === option.value ? '#FFFFFF' : '#2e7d32'}
+                />
+              </View>
+              <RNText
+                style={[styles.typeLabel, form.type === option.value && styles.typeLabelSelected]}
+              >
+                {option.label}
+              </RNText>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Action Buttons */}
       <TouchableOpacity
         disabled={loading}
-        style={[theme.button, { marginTop: 10 }]}
+        style={[styles.saveButton, { opacity: loading ? 0.6 : 1 }]}
         onPress={() => handleSave()}
       >
-        <Text style={{ color: theme.text }}>{loading ? t('loadingData') : t('save')}</Text>
+        <Text style={styles.saveButtonText}>{loading ? t('loadingData') : t('save')}</Text>
       </TouchableOpacity>
 
       {/* Authentication Modal */}
@@ -242,23 +263,127 @@ export default function CreateNewLocationScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    padding: 25,
+    padding: 20,
     paddingTop: 20,
     flexGrow: 1,
+  },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2e7d32',
+  },
+  infoText: {
+    flex: 1,
+    marginLeft: 12,
+    fontSize: 14,
+    color: '#2e7d32',
+    lineHeight: 20,
+  },
+  inputCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  sectionLabel: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 12,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+  },
+  typeCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  typeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    backgroundColor: 'transparent',
+  },
+  typeOption: {
+    width: '48%',
+    alignItems: 'center',
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  typeOptionSelected: {
+    backgroundColor: '#e8f5e9',
+    borderColor: '#2e7d32',
+  },
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#e8f5e9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  iconCircleSelected: {
+    backgroundColor: '#2e7d32',
+  },
+  typeLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+  },
+  typeLabelSelected: {
+    color: '#2e7d32',
+    fontWeight: '700',
+  },
+  saveButton: {
+    backgroundColor: '#2e7d32',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    shadowColor: '#2e7d32',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 10,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 20,
   },
   typeOptionsRow: {
     flexDirection: 'row',
@@ -266,15 +391,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 0,
     justifyContent: 'space-between',
-  },
-  typeOption: {
-    alignItems: 'center',
-    paddingVertical: 10,
-    width: '48%',
-    minWidth: 150,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderRadius: 10,
   },
   buttonDarkMode: {
     borderWidth: 0,
