@@ -97,10 +97,14 @@ export default function CreateNewLocationUpdate({
       }
 
       // Check authentication before proceeding (unless we're retrying after auth)
-      if (!skipAuthCheck && !isAuthenticated) {
+      // Require both isAuthenticated flag AND valid username
+      if (!skipAuthCheck && (!isAuthenticated || !username)) {
+        console.log('[CreateLocationUpdate] Auth check failed:', { isAuthenticated, username });
         setShowAuthModal(true);
         return;
       }
+
+      console.log('[CreateLocationUpdate] Creating update with username:', username);
 
       setLoading(true);
       try {
@@ -110,6 +114,7 @@ export default function CreateNewLocationUpdate({
           available: form.available,
           ticks: form.ticks,
           device: identity || 'unknown',
+          username: username,
         });
 
         const newUpdate: LocationUpdate = await createLocationUpdate({

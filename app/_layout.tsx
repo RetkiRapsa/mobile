@@ -90,15 +90,32 @@ function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         const { isAuthenticated: authStatus, getStoredUsername } = await import('@/utils/auth');
         const authenticated = await authStatus();
-        setIsAuthenticated(authenticated);
 
         if (authenticated) {
           const storedUsername = await getStoredUsername();
-          setUsername(storedUsername);
+
+          // Only consider authenticated if BOTH token AND username exist
+          if (storedUsername) {
+            console.log('[Auth] User authenticated with username:', storedUsername);
+            setIsAuthenticated(true);
+            setUsername(storedUsername);
+          } else {
+            console.log('[Auth] Token exists but no username - clearing authentication');
+            setIsAuthenticated(false);
+            setUsername(null);
+            // Clear the orphaned token
+            const { clearToken } = await import('@/utils/auth');
+            await clearToken();
+          }
+        } else {
+          console.log('[Auth] No valid token found');
+          setIsAuthenticated(false);
+          setUsername(null);
         }
       } catch (error) {
         console.error('[Auth] Failed to check authentication:', error);
         setIsAuthenticated(false);
+        setUsername(null);
       } finally {
         setIsCheckingAuth(false);
       }

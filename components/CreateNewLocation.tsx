@@ -135,10 +135,14 @@ export default function CreateNewLocationScreen() {
       }
 
       // Check authentication before proceeding (unless we're retrying after auth)
-      if (!skipAuthCheck && !isAuthenticated) {
+      // Require both isAuthenticated flag AND valid username
+      if (!skipAuthCheck && (!isAuthenticated || !username)) {
+        console.log('[CreateLocation] Auth check failed:', { isAuthenticated, username });
         setShowAuthModal(true);
         return;
       }
+
+      console.log('[CreateLocation] Creating location with username:', username);
 
       setLoading(true);
       const location = await getCurrentGpsLocation();
