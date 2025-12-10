@@ -19,7 +19,7 @@ export default function InfoScreen({
   const buttonStyle = useColorScheme() === 'dark' ? styles.buttonDarkMode : styles.buttonLightMode;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor }} edges={['bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor }} edges={[]}>
       <ScrollView
         style={[styles.container, { backgroundColor }]}
         contentContainerStyle={styles.contentContainer}
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
-    marginBottom: 40,
+    paddingBottom: 20,
   },
   title: {
     fontSize: 24,
