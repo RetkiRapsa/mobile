@@ -43,6 +43,7 @@ type CreateNewLocationUpdateProps = {
   location: Location;
   available: boolean;
   ticks: boolean;
+  editingUpdate?: LocationUpdate | null;
   handleClose: () => void;
   handleSavedUpdate: (available: boolean, ticks: boolean) => void;
 };
@@ -51,6 +52,7 @@ export default function CreateNewLocationUpdate({
   location,
   available,
   ticks,
+  editingUpdate,
   handleClose,
   handleSavedUpdate,
 }: CreateNewLocationUpdateProps) {
@@ -90,6 +92,19 @@ export default function CreateNewLocationUpdate({
     }));
   }, [identity, location]);
 
+  // Populate form with editing data if editingUpdate is provided
+  useEffect(() => {
+    if (editingUpdate) {
+      setForm({
+        locationId: location.id ?? '',
+        updateText: editingUpdate.updateText || '',
+        ticks: ticks,
+        available: available,
+        device: identity ?? '',
+      });
+    }
+  }, [editingUpdate, location.id, identity, ticks, available]);
+
   // Check authentication on mount - show auth modal immediately if not authenticated
   useEffect(() => {
     if (!isAuthenticated || !username) {
@@ -113,26 +128,54 @@ export default function CreateNewLocationUpdate({
         return;
       }
 
-      console.log('[CreateLocationUpdate] Creating update with username:', username);
+      console.log('[CreateLocationUpdate] Creating/updating update with username:', username);
 
       setLoading(true);
       try {
-        devLog('Creating location update with form:', {
-          locationId: form.locationId,
-          updateText: form.updateText,
-          available: form.available,
-          ticks: form.ticks,
-          device: identity || 'unknown',
-          username: username,
-        });
+        let newUpdate: LocationUpdate;
 
-        const newUpdate: LocationUpdate = await createLocationUpdate({
-          ...form,
-          device: identity || 'unknown',
-          username: username,
-        });
+        if (editingUpdate) {
+          // Update existing update
+          devLog('Updating location update with form:', {
+            locationId: form.locationId,
+            updateId: editingUpdate.id,
+            updateText: form.updateText,
+            available: form.available,
+            ticks: form.ticks,
+            device: identity || 'unknown',
+            username: username,
+          });
 
-        devLog('Location update created:', newUpdate);
+          const { apiUpdateLocationUpdate } = await import('@/utils/client');
+          const response = await apiUpdateLocationUpdate(form.locationId, editingUpdate.id, {
+            updateText: form.updateText,
+            available: form.available,
+            ticks: form.ticks,
+            device: identity || 'unknown',
+            username: username,
+          });
+
+          newUpdate = response.data;
+          devLog('Location update updated:', newUpdate);
+        } else {
+          // Create new update
+          devLog('Creating location update with form:', {
+            locationId: form.locationId,
+            updateText: form.updateText,
+            available: form.available,
+            ticks: form.ticks,
+            device: identity || 'unknown',
+            username: username,
+          });
+
+          newUpdate = await createLocationUpdate({
+            ...form,
+            device: identity || 'unknown',
+            username: username,
+          });
+
+          devLog('Location update created:', newUpdate);
+        }
 
         if (!newUpdate.id) {
           Alert.alert(t('error'), t('updateSaveFailed'));
@@ -195,6 +238,8 @@ export default function CreateNewLocationUpdate({
       handleClose,
       t,
       isAuthenticated,
+      username,
+      editingUpdate,
     ]
   );
 

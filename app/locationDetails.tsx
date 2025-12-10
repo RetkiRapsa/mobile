@@ -30,6 +30,7 @@ export default function LocationDetailsScreen() {
   const foregroundColor = colors.light.text;
   const [locationUpdates, setLocationUpdates] = useState<LocationUpdate[]>([]);
   const [addLocationUpdate, setAddLocationUpdate] = useState(false);
+  const [editingUpdate, setEditingUpdate] = useState<LocationUpdate | null>(null);
   const [updatedAvailable, setUpdatedAvailable] = useState(false);
   const [updatedTicks, setUpdatedTicks] = useState(false);
   const [lastUpdateCreatedAt, setLastUpdateCreatedAt] = useState<string | undefined>(undefined);
@@ -89,6 +90,21 @@ export default function LocationDetailsScreen() {
       );
     },
     [username, location, t]
+  );
+
+  const handleEditUpdate = useCallback(
+    (update: LocationUpdate) => {
+      // Check if user owns this update
+      if (!username || username !== update.username) {
+        Alert.alert(t('error'), t('cannotEditOthersUpdates'));
+        return;
+      }
+
+      // Set the update to edit and show the edit form
+      setEditingUpdate(update);
+      setAddLocationUpdate(true);
+    },
+    [username, t]
   );
 
   useEffect(() => {
@@ -169,7 +185,11 @@ export default function LocationDetailsScreen() {
         location={selectedLocation}
         available={updatedAvailable}
         ticks={updatedTicks}
-        handleClose={() => setAddLocationUpdate(false)}
+        editingUpdate={editingUpdate}
+        handleClose={() => {
+          setAddLocationUpdate(false);
+          setEditingUpdate(null);
+        }}
         handleSavedUpdate={(available: boolean, ticks: boolean) => {
           setUpdatedAvailable(available);
           setUpdatedTicks(ticks);
@@ -254,14 +274,22 @@ export default function LocationDetailsScreen() {
                       </Text>
                     </View>
                     {username && username === locationUpdate.username && (
-                      <TouchableOpacity
-                        onPress={() =>
-                          handleDeleteUpdate(locationUpdate.id, locationUpdate.username!)
-                        }
-                        style={styles.deleteButton}
-                      >
-                        <MaterialCommunityIcons name="delete" size={24} color="#d32f2f" />
-                      </TouchableOpacity>
+                      <View style={styles.actionButtons}>
+                        <TouchableOpacity
+                          onPress={() => handleEditUpdate(locationUpdate)}
+                          style={styles.editButton}
+                        >
+                          <MaterialCommunityIcons name="pencil" size={24} color="#1976d2" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() =>
+                            handleDeleteUpdate(locationUpdate.id, locationUpdate.username!)
+                          }
+                          style={styles.deleteButton}
+                        >
+                          <MaterialCommunityIcons name="delete" size={24} color="#d32f2f" />
+                        </TouchableOpacity>
+                      </View>
                     )}
                   </View>
                   <Text style={[styles.updateMessage, { color: foregroundColor }]}>
@@ -360,9 +388,16 @@ const styles = StyleSheet.create({
   updateMeta: {
     flex: 1,
   },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  editButton: {
+    padding: 8,
+  },
   deleteButton: {
     padding: 8,
-    marginLeft: 8,
   },
   username: {
     fontSize: 16,
