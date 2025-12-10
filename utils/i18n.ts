@@ -123,6 +123,8 @@ type TranslationKey =
   | 'registerTitle'
   | 'registerButton'
   | 'username'
+  | 'usernameLogin'
+  | 'usernameRegister'
   | 'password'
   | 'usernamePlaceholder'
   | 'passwordPlaceholder'
@@ -187,7 +189,7 @@ const translations: { [locale: string]: Translations } = {
     copied: 'Kopioitu',
     deviceIdCopied: 'Tunniste kopioitu leikepöydälle',
     privacyNotice:
-      'RetkiRapsa ei kerää tai lähetä käyttäjätietoja mihinkään palveluun. Sovellus käyttää laitteesi sijaintia vain kartan näyttämiseen ja kohteiden näyttämiseen.',
+      'RetkiRapsa ei lähetä käyttäjätietoja kolmansille osapuolille. Sovellus käyttää laitteesi sijaintia vain kartan näyttämiseen ja kohteiden näyttämiseen.',
     tabMap: 'Kartta',
     tabNew: 'Uusi',
     tabInfo: 'Ohjeet',
@@ -217,7 +219,7 @@ const translations: { [locale: string]: Translations } = {
     gpsLocationNote:
       'Huom! Uusi kohde tallennetaan siihen kohtaan kartalla jossa olet GPS:n mukaan tällä hetkellä.',
     infoIntro:
-      'RetkiRapsa on helppokäyttöinen sovellus retkikohteiden arvioimiseen ja löytämiseen. Voit etsiä retkikohteita kartalta, lukea muiden retkeilijöiden arvosteluja ja jakaa omat kokemuksesi – ilman kirjautumista!',
+      'RetkiRapsa on helppokäyttöinen sovellus retkikohteiden arvioimiseen ja löytämiseen. Voit etsiä retkikohteita kartalta, lukea muiden retkeilijöiden arvosteluja ja jakaa omat kokemuksesi.',
     infoSearchTitle: 'Etsi kohteita kartalta',
     infoSearchText1:
       '• Sovellus näyttää lähelläsi olevat taukopaikat, kuten laavut, nuotiopaikat, vessat ja parkkipaikat.',
@@ -305,6 +307,8 @@ const translations: { [locale: string]: Translations } = {
     registerTitle: 'Luo käyttäjätili',
     registerButton: 'Rekisteröidy',
     username: 'Käyttäjätunnus (näkyy muille)',
+    usernameLogin: 'Käyttäjätunnus',
+    usernameRegister: 'Käyttäjätunnus (näkyy muille)',
     password: 'Salasana',
     usernamePlaceholder: 'Käyttäjätunnus',
     passwordPlaceholder: 'Salasana',
@@ -365,7 +369,7 @@ const translations: { [locale: string]: Translations } = {
     copied: 'Copied',
     deviceIdCopied: 'Device ID copied to clipboard',
     privacyNotice:
-      'RetkiRapsa does not collect or send user data to any service. The app uses your device location only for displaying the map and showing locations.',
+      'RetkiRapsa does not send user data to third parties. The app uses your device location only for displaying the map and showing locations.',
     tabMap: 'Map',
     tabNew: 'New',
     tabInfo: 'Info',
@@ -395,7 +399,7 @@ const translations: { [locale: string]: Translations } = {
     gpsLocationNote:
       'Note! The new location will be saved at the point on the map where you are currently according to GPS.',
     infoIntro:
-      'RetkiRapsa is an easy-to-use app for rating and finding outdoor locations. You can search for locations on the map, read reviews from other hikers, and share your own experiences – without registration!',
+      'RetkiRapsa is an easy-to-use app for rating and finding outdoor locations. You can search for locations on the map, read reviews from other hikers, and share your own experiences.',
     infoSearchTitle: 'Search for locations on the map',
     infoSearchText1:
       '• The app shows nearby rest areas, such as shelters, fireplaces, toilets, and parking lots.',
@@ -482,6 +486,8 @@ const translations: { [locale: string]: Translations } = {
     registerTitle: 'Create account',
     registerButton: 'Register',
     username: 'Username (visible to others)',
+    usernameLogin: 'Username',
+    usernameRegister: 'Username (visible to others)',
     password: 'Password',
     usernamePlaceholder: 'Username',
     passwordPlaceholder: 'Password',

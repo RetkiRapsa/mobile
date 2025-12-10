@@ -15,6 +15,7 @@ import {
 import { loginUser, registerUser } from '@/utils/auth';
 import { useTranslation } from '@/utils/i18n';
 import { devLog } from '@/utils/logger';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface AuthScreenProps {
   onAuthSuccess: (username: string) => void;
@@ -84,11 +85,26 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
           <Text style={styles.title}>RetkiRapsa</Text>
-          <Text style={styles.subtitle}>{isLogin ? t('loginTitle') : t('registerTitle')}</Text>
+          <View
+            style={[
+              styles.modeIndicator,
+              isLogin ? styles.modeIndicatorLogin : styles.modeIndicatorRegister,
+            ]}
+          >
+            <MaterialCommunityIcons
+              name={isLogin ? 'login' : 'account-plus'}
+              size={28}
+              color="#2e7d32"
+              style={styles.modeIcon}
+            />
+            <Text style={styles.subtitle}>{isLogin ? t('loginTitle') : t('registerTitle')}</Text>
+          </View>
 
           <View style={styles.formContainer}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('username')}</Text>
+              <Text style={styles.label}>
+                {isLogin ? t('usernameLogin') : t('usernameRegister')}
+              </Text>
               <TextInput
                 style={styles.input}
                 placeholder={t('usernamePlaceholder')}
@@ -130,7 +146,11 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
             <TouchableOpacity
               style={styles.switchButton}
-              onPress={() => setIsLogin(!isLogin)}
+              onPress={() => {
+                setIsLogin(!isLogin);
+                setUsername('');
+                setPassword('');
+              }}
               disabled={loading}
             >
               <Text style={styles.switchButtonText}>
@@ -166,13 +186,29 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: 'bold',
     color: '#2e7d32',
-    marginBottom: 10,
+    marginBottom: 20,
+  },
+  modeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginBottom: 40,
+  },
+  modeIcon: {
+    marginRight: 10,
+  },
+  modeIndicatorLogin: {
+    backgroundColor: '#e3f2fd',
+  },
+  modeIndicatorRegister: {
+    backgroundColor: '#e8f5e9',
   },
   subtitle: {
     fontSize: 24,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 40,
   },
   formContainer: {
     width: '100%',
