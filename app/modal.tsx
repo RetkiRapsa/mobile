@@ -8,6 +8,7 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import * as Clipboard from 'expo-clipboard';
 
@@ -79,50 +80,52 @@ export default function InstructionsScreen() {
 
   // Always show settings/info screen
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: backgroundColor }]}>
-      <Text style={[styles.title, { color: foregroundColor }]}>RetkiRapsa</Text>
-      <Text style={{ color: foregroundColor }}>
-        {t('version')} {appConfig.expo.version}
-      </Text>
-      <Text style={{ color: foregroundColor }}>
-        {t('copyright')} {new Date().getFullYear()}
-      </Text>
-      <Text style={{ color: foregroundColor }}>Artur Gajewski</Text>
-      <Separator />
-
-      {/* Show login button if not authenticated, otherwise show logout */}
-      {!isAuthenticated || !username ? (
-        <TouchableOpacity style={styles.loginButton} onPress={() => setShowAuthScreen(true)}>
-          <Text style={styles.loginButtonText}>{t('loginTitle')}</Text>
-        </TouchableOpacity>
-      ) : (
-        <>
-          <Text style={{ color: foregroundColor, marginBottom: 5 }}>
-            {t('loggedInAs')}: {username}
-          </Text>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>{t('logoutButton')}</Text>
-          </TouchableOpacity>
-        </>
-      )}
-
-      <Separator />
-      <LanguageSelector />
-      <Separator />
-      <Text style={{ color: foregroundColor }}>
-        {process.env.EXPO_PUBLIC_RETKIRAPSA_API_DOMAIN === 'api.retkirapsa.com'
-          ? t('poweredByVPS')
-          : t('developmentVersion')}
-      </Text>
-      <Separator />
-      <View style={{ marginTop: 20, marginBottom: 20, width: '80%' }}>
-        <Text
-          style={{ fontSize: 15, marginBottom: 10, textAlign: 'center', color: foregroundColor }}
-        >
-          {t('privacyNotice')}
+    <SafeAreaView style={{ flex: 1, backgroundColor }} edges={['bottom']}>
+      <ScrollView contentContainerStyle={[styles.container, { backgroundColor: backgroundColor }]}>
+        <Text style={[styles.title, { color: foregroundColor }]}>RetkiRapsa</Text>
+        <Text style={{ color: foregroundColor }}>
+          {t('version')} {appConfig.expo.version}
         </Text>
-      </View>
-    </ScrollView>
+        <Text style={{ color: foregroundColor }}>
+          {t('copyright')} {new Date().getFullYear()}
+        </Text>
+        <Text style={{ color: foregroundColor }}>Artur Gajewski</Text>
+        <Separator />
+
+        {/* Show login button if not authenticated, otherwise show logout */}
+        {!isAuthenticated || !username ? (
+          <TouchableOpacity style={styles.loginButton} onPress={() => setShowAuthScreen(true)}>
+            <Text style={styles.loginButtonText}>{t('loginTitle')}</Text>
+          </TouchableOpacity>
+        ) : (
+          <>
+            <Text style={{ color: foregroundColor, marginBottom: 5 }}>
+              {t('loggedInAs')}: {username}
+            </Text>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Text style={styles.logoutButtonText}>{t('logoutButton')}</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        <Separator />
+        <LanguageSelector />
+        <Separator />
+        <Text style={{ color: foregroundColor }}>
+          {process.env.EXPO_PUBLIC_RETKIRAPSA_API_DOMAIN === 'api.retkirapsa.com'
+            ? t('poweredByVPS')
+            : t('developmentVersion')}
+        </Text>
+        <Separator />
+        <View style={{ marginTop: 20, marginBottom: 20, width: '80%' }}>
+          <Text
+            style={{ fontSize: 15, marginBottom: 10, textAlign: 'center', color: foregroundColor }}
+          >
+            {t('privacyNotice')}
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

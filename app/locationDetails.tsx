@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import * as Clipboard from 'expo-clipboard';
 
@@ -209,7 +210,7 @@ export default function LocationDetailsScreen() {
     );
   } else {
     return (
-      <>
+      <SafeAreaView style={{ flex: 1, backgroundColor }} edges={['bottom']}>
         <ScrollView
           style={[styles.container, { backgroundColor }]}
           contentContainerStyle={styles.contentContainer}
@@ -324,7 +325,7 @@ export default function LocationDetailsScreen() {
             </TouchableOpacity>
           </View>
         )}
-      </>
+      </SafeAreaView>
     );
   }
 }

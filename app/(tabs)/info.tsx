@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text, View } from '@/components/Themed';
 import colors from '@/constants/Colors';
@@ -18,77 +19,79 @@ export default function InfoScreen({
   const buttonStyle = useColorScheme() === 'dark' ? styles.buttonDarkMode : styles.buttonLightMode;
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor }]}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <Text style={styles.title}>RetkiRapsa</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor }} edges={['bottom']}>
+      <ScrollView
+        style={[styles.container, { backgroundColor }]}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <Text style={styles.title}>RetkiRapsa</Text>
 
-      <Text style={styles.intro}>{t('infoIntro')}</Text>
+        <Text style={styles.intro}>{t('infoIntro')}</Text>
 
-      <View style={[styles.section, { backgroundColor }]}>
-        <Text style={styles.heading}>{t('infoSearchTitle')}</Text>
-        <Text style={styles.text}>{t('infoSearchText1')}</Text>
-        <Text style={styles.text}>{t('infoSearchText2')}</Text>
-      </View>
+        <View style={[styles.section, { backgroundColor }]}>
+          <Text style={styles.heading}>{t('infoSearchTitle')}</Text>
+          <Text style={styles.text}>{t('infoSearchText1')}</Text>
+          <Text style={styles.text}>{t('infoSearchText2')}</Text>
+        </View>
 
-      <View style={[styles.section, { backgroundColor }]}>
-        <Text style={styles.heading}>{t('infoIconColorsTitle')}</Text>
-        <Text style={styles.text}>{t('infoIconColorsText1')}</Text>
-        <Text style={styles.text}>{t('infoIconColorsText2')}</Text>
-        <Text style={styles.text}>{t('infoIconColorsText3')}</Text>
-      </View>
+        <View style={[styles.section, { backgroundColor }]}>
+          <Text style={styles.heading}>{t('infoIconColorsTitle')}</Text>
+          <Text style={styles.text}>{t('infoIconColorsText1')}</Text>
+          <Text style={styles.text}>{t('infoIconColorsText2')}</Text>
+          <Text style={styles.text}>{t('infoIconColorsText3')}</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.heading}>{t('infoReadUpdatesTitle')}</Text>
-        <Text style={styles.text}>{t('infoReadUpdatesText1')}</Text>
-        <Text style={styles.text}>{t('infoReadUpdatesText2')}</Text>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.heading}>{t('infoReadUpdatesTitle')}</Text>
+          <Text style={styles.text}>{t('infoReadUpdatesText1')}</Text>
+          <Text style={styles.text}>{t('infoReadUpdatesText2')}</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.heading}>{t('infoAddUpdateTitle')}</Text>
-        <Text style={styles.text}>{t('infoAddUpdateText1')}</Text>
-        <Text style={styles.text}>{t('infoAddUpdateText2')}</Text>
-        <Text style={styles.text}>{t('infoAddUpdateText3')}</Text>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.heading}>{t('infoAddUpdateTitle')}</Text>
+          <Text style={styles.text}>{t('infoAddUpdateText1')}</Text>
+          <Text style={styles.text}>{t('infoAddUpdateText2')}</Text>
+          <Text style={styles.text}>{t('infoAddUpdateText3')}</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.heading}>{t('infoMissingLocationTitle')}</Text>
-        <Text style={styles.text}>{t('infoMissingLocationText1')}</Text>
-        <Text style={styles.text}>{t('infoMissingLocationText2')}</Text>
-        <Text style={styles.text}>{t('infoMissingLocationText3')}</Text>
-        <Text style={styles.text}>{t('infoMissingLocationText4')}</Text>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.heading}>{t('infoMissingLocationTitle')}</Text>
+          <Text style={styles.text}>{t('infoMissingLocationText1')}</Text>
+          <Text style={styles.text}>{t('infoMissingLocationText2')}</Text>
+          <Text style={styles.text}>{t('infoMissingLocationText3')}</Text>
+          <Text style={styles.text}>{t('infoMissingLocationText4')}</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.heading}>{t('infoNoRegistrationTitle')}</Text>
-        <Text style={styles.text}>{t('infoNoRegistrationText1')}</Text>
-        <Text style={styles.text}>{t('infoNoRegistrationText2')}</Text>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.heading}>{t('infoNoRegistrationTitle')}</Text>
+          <Text style={styles.text}>{t('infoNoRegistrationText1')}</Text>
+          <Text style={styles.text}>{t('infoNoRegistrationText2')}</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.heading}>{t('infoTipsTitle')}</Text>
-        <Text style={styles.text}>{t('infoTipsText1')}</Text>
-        <Text style={styles.text}>{t('infoTipsText2')}</Text>
-        <Text style={styles.text}>{t('infoTipsText3')}</Text>
-        <Text style={styles.text}>{t('infoTipsText4')}</Text>
-        <Text style={styles.text}>{t('infoTipsText5')}</Text>
-        <Text style={styles.text}>{t('infoTipsText6')}</Text>
-        <Text style={styles.text}>{t('infoTipsText7')}</Text>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.heading}>{t('infoTipsTitle')}</Text>
+          <Text style={styles.text}>{t('infoTipsText1')}</Text>
+          <Text style={styles.text}>{t('infoTipsText2')}</Text>
+          <Text style={styles.text}>{t('infoTipsText3')}</Text>
+          <Text style={styles.text}>{t('infoTipsText4')}</Text>
+          <Text style={styles.text}>{t('infoTipsText5')}</Text>
+          <Text style={styles.text}>{t('infoTipsText6')}</Text>
+          <Text style={styles.text}>{t('infoTipsText7')}</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.heading}>{t('infoFeedbackTitle')}</Text>
-        <Text style={styles.text}>{t('infoFeedbackText1')}</Text>
-        <Text style={styles.text}>{t('infoFeedbackEmail')}</Text>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.heading}>{t('infoFeedbackTitle')}</Text>
+          <Text style={styles.text}>{t('infoFeedbackText1')}</Text>
+          <Text style={styles.text}>{t('infoFeedbackEmail')}</Text>
+        </View>
 
-      {showButton && onAcknowledge && (
-        <TouchableOpacity style={[buttonStyle, { marginTop: 20 }]} onPress={onAcknowledge}>
-          <Text style={{ color: foregroundColor }}>{t('startApp')}</Text>
-        </TouchableOpacity>
-      )}
-    </ScrollView>
+        {showButton && onAcknowledge && (
+          <TouchableOpacity style={[buttonStyle, { marginTop: 20 }]} onPress={onAcknowledge}>
+            <Text style={{ color: foregroundColor }}>{t('startApp')}</Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -192,32 +193,34 @@ function RootLayoutNav({ children }: { children?: React.ReactNode }) {
   const colorScheme = useColorScheme();
 
   return (
-    <ProductionErrorBoundary>
-      <AppProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          {children}
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="modal"
-              options={{
-                presentation: 'card',
-                headerTitle: t('aboutHeader'),
-                headerBackTitle: t('backButton'),
-              }}
-            />
-            <Stack.Screen
-              name="locationDetails"
-              options={{
-                presentation: 'card',
-                headerTitle: t('locationDetailsHeader'),
-                headerBackTitle: t('backButton'),
-              }}
-            />
-          </Stack>
-        </ThemeProvider>
-      </AppProvider>
-    </ProductionErrorBoundary>
+    <SafeAreaProvider>
+      <ProductionErrorBoundary>
+        <AppProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            {children}
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="modal"
+                options={{
+                  presentation: 'card',
+                  headerTitle: t('aboutHeader'),
+                  headerBackTitle: t('backButton'),
+                }}
+              />
+              <Stack.Screen
+                name="locationDetails"
+                options={{
+                  presentation: 'card',
+                  headerTitle: t('locationDetailsHeader'),
+                  headerBackTitle: t('backButton'),
+                }}
+              />
+            </Stack>
+          </ThemeProvider>
+        </AppProvider>
+      </ProductionErrorBoundary>
+    </SafeAreaProvider>
   );
 }
 
