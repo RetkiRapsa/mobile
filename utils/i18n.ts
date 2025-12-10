@@ -153,7 +153,8 @@ type TranslationKey =
   | 'updateDeleted'
   | 'updateDeleteFailed'
   | 'cannotDeleteOthersUpdates'
-  | 'cannotEditOthersUpdates';
+  | 'cannotEditOthersUpdates'
+  | 'loginTab';
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -336,6 +337,7 @@ const translations: { [locale: string]: Translations } = {
     updateDeleteFailed: 'Päivityksen poistaminen epäonnistui. Yritä uudelleen.',
     cannotDeleteOthersUpdates: 'Et voi poistaa muiden käyttäjien päivityksiä.',
     cannotEditOthersUpdates: 'Et voi muokata muiden käyttäjien päivityksiä.',
+    loginTab: 'Kirjaudu',
   },
   en: {
     locationNotDetermined: 'Location could not be determined',
@@ -512,6 +514,7 @@ const translations: { [locale: string]: Translations } = {
     updateDeleteFailed: 'Failed to delete update. Please try again.',
     cannotDeleteOthersUpdates: "You cannot delete other users' updates.",
     cannotEditOthersUpdates: "You cannot edit other users' updates.",
+    loginTab: 'Login',
   },
 };
 

@@ -12,6 +12,7 @@ import {
 import * as Clipboard from 'expo-clipboard';
 
 import { useAppContext } from '@/app/_layout';
+import AuthScreen from '@/components/AuthScreen';
 import LanguageSelector from '@/components/LanguageSelector';
 import colors from '@/constants/Colors';
 import { logoutUser } from '@/utils/auth';
@@ -29,7 +30,7 @@ const Separator: React.FC = () => (
 
 export default function InstructionsScreen() {
   const { t } = useTranslation();
-  const { username, setIsAuthenticated, setUsername } = useAppContext();
+  const { username, isAuthenticated, setIsAuthenticated, setUsername } = useAppContext();
   const backgroundColor =
     useColorScheme() === 'dark' ? colors.dark.background : colors.light.background;
   const foregroundColor = useColorScheme() === 'dark' ? colors.dark.text : colors.light.text;
@@ -56,6 +57,27 @@ export default function InstructionsScreen() {
     }
   };
 
+  const [showAuthScreen, setShowAuthScreen] = useState(false);
+
+  // If auth screen is shown, display it as an overlay
+  if (showAuthScreen) {
+    return (
+      <View style={{ flex: 1, backgroundColor: backgroundColor }}>
+        <AuthScreen
+          onAuthSuccess={(username) => {
+            setIsAuthenticated(true);
+            setUsername(username);
+            setShowAuthScreen(false);
+          }}
+        />
+        <TouchableOpacity style={styles.cancelButton} onPress={() => setShowAuthScreen(false)}>
+          <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Always show settings/info screen
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: backgroundColor }]}>
       <Text style={[styles.title, { color: foregroundColor }]}>RetkiRapsa</Text>
@@ -67,7 +89,13 @@ export default function InstructionsScreen() {
       </Text>
       <Text style={{ color: foregroundColor }}>Artur Gajewski</Text>
       <Separator />
-      {username && (
+
+      {/* Show login button if not authenticated, otherwise show logout */}
+      {!isAuthenticated || !username ? (
+        <TouchableOpacity style={styles.loginButton} onPress={() => setShowAuthScreen(true)}>
+          <Text style={styles.loginButtonText}>{t('loginTitle')}</Text>
+        </TouchableOpacity>
+      ) : (
         <>
           <Text style={{ color: foregroundColor, marginBottom: 5 }}>
             {t('loggedInAs')}: {username}
@@ -75,9 +103,10 @@ export default function InstructionsScreen() {
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutButtonText}>{t('logoutButton')}</Text>
           </TouchableOpacity>
-          <Separator />
         </>
       )}
+
+      <Separator />
       <LanguageSelector />
       <Separator />
       <Text style={{ color: foregroundColor }}>
@@ -122,6 +151,31 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loginButton: {
+    backgroundColor: '#2e7d32',
+    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    marginTop: 10,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelButton: {
+    backgroundColor: '#757575',
+    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    margin: 20,
+    alignSelf: 'center',
+  },
+  cancelButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
