@@ -23,7 +23,8 @@ type TranslationKey =
   | 'locations'
   | 'version'
   | 'copyright'
-  | 'poweredByVPS'
+  | 'sourceLIPAS'
+  | 'dataSources'
   | 'developmentVersion'
   | 'deviceId'
   | 'copied'
@@ -183,7 +184,8 @@ const translations: { [locale: string]: Translations } = {
     locations: 'kohdetta',
     version: 'Versio',
     copyright: 'Copyright (c)',
-    poweredByVPS: 'Powered by VPS',
+    dataSources: 'Tietolähteet:',
+    sourceLIPAS: 'LIPAS (CC BY 4.0)',
     developmentVersion: 'Kehitysversio',
     deviceId: 'Tunniste:',
     copied: 'Kopioitu',
@@ -363,7 +365,8 @@ const translations: { [locale: string]: Translations } = {
     locations: 'locations',
     version: 'Version',
     copyright: 'Copyright (c)',
-    poweredByVPS: 'Powered by VPS',
+    dataSources: 'Data sources:',
+    sourceLIPAS: 'LIPAS (CC BY 4.0)',
     developmentVersion: 'Development version',
     deviceId: 'Device ID:',
     copied: 'Copied',

@@ -111,11 +111,8 @@ export default function InstructionsScreen() {
         <Separator />
         <LanguageSelector />
         <Separator />
-        <Text style={{ color: foregroundColor }}>
-          {process.env.EXPO_PUBLIC_RETKIRAPSA_API_DOMAIN === 'api.retkirapsa.com'
-            ? t('poweredByVPS')
-            : t('developmentVersion')}
-        </Text>
+        <Text style={{ color: foregroundColor }}>{t('dataSources')}</Text>
+        <Text style={{ color: foregroundColor }}>{t('sourceLIPAS')}</Text>
         <Separator />
         <View style={{ marginTop: 20, marginBottom: 20, width: '80%' }}>
           <Text
