@@ -79,6 +79,7 @@ export default function CreateNewLocationUpdate({
   const [form, setForm] = useState<FormState>(defaultForm);
   const [loading, setLoading] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [saveAttempted, setSaveAttempted] = useState(false);
 
   // All hooks are called before any conditional return
   useEffect(() => {
@@ -88,6 +89,13 @@ export default function CreateNewLocationUpdate({
       device: identity ?? '',
     }));
   }, [identity, location]);
+
+  // Check authentication on mount - show auth modal immediately if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !username) {
+      setShowAuthModal(true);
+    }
+  }, [isAuthenticated, username]);
 
   const handleSave = useCallback(
     async (skipAuthCheck = false) => {
@@ -100,6 +108,7 @@ export default function CreateNewLocationUpdate({
       // Require both isAuthenticated flag AND valid username
       if (!skipAuthCheck && (!isAuthenticated || !username)) {
         console.log('[CreateLocationUpdate] Auth check failed:', { isAuthenticated, username });
+        setSaveAttempted(true); // Mark that user tried to save
         setShowAuthModal(true);
         return;
       }
@@ -288,7 +297,10 @@ export default function CreateNewLocationUpdate({
         visible={showAuthModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowAuthModal(false)}
+        onRequestClose={() => {
+          setShowAuthModal(false);
+          handleClose();
+        }}
       >
         <View style={{ flex: 1 }}>
           <AuthScreen
@@ -296,11 +308,20 @@ export default function CreateNewLocationUpdate({
               setIsAuthenticated(true);
               setUsername(username);
               setShowAuthModal(false);
-              // Retry save after authentication - skip auth check since we just authenticated
-              handleSave(true);
+              // Only retry save if user previously attempted to save
+              if (saveAttempted) {
+                setSaveAttempted(false);
+                handleSave(true);
+              }
             }}
           />
-          <TouchableOpacity style={styles.closeButton} onPress={() => setShowAuthModal(false)}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => {
+              setShowAuthModal(false);
+              handleClose();
+            }}
+          >
             <Text style={styles.closeButtonText}>{t('cancel')}</Text>
           </TouchableOpacity>
         </View>

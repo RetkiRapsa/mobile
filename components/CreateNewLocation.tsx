@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Animated,
@@ -17,11 +17,9 @@ import { Text, View } from '@/components/Themed';
 import colors from '@/constants/Colors';
 import Location from '@/types/Location';
 import createNewLocation from '@/utils/createLocation';
-import { hasNearbyLocations } from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
 import { useTranslation } from '@/utils/i18n';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
 
 import ScrollView = Animated.ScrollView;
 
@@ -79,6 +77,7 @@ export default function CreateNewLocationScreen() {
   });
   const [loading, setLoading] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [saveAttempted, setSaveAttempted] = useState(false);
 
   // Localized type options
   const typeOptions = useMemo(
@@ -106,25 +105,12 @@ export default function CreateNewLocationScreen() {
     []
   );
 
-  // Warn if nearby locations exist
-  useFocusEffect(
-    useCallback(() => {
-      let isActive = true;
-      (async () => {
-        const location = await getCurrentGpsLocation();
-        if (
-          isActive &&
-          location &&
-          hasNearbyLocations(visibleLocations, location.latitude, location.longitude)
-        ) {
-          Alert.alert(t('notice'), t('nearbyLocationWarning'));
-        }
-      })();
-      return () => {
-        isActive = false;
-      };
-    }, [visibleLocations, t])
-  );
+  // Check authentication on mount - show auth modal immediately if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+    }
+  }, [isAuthenticated]);
 
   // Save handler
   const handleSave = useCallback(
@@ -138,6 +124,7 @@ export default function CreateNewLocationScreen() {
       // Require both isAuthenticated flag AND valid username
       if (!skipAuthCheck && (!isAuthenticated || !username)) {
         console.log('[CreateLocation] Auth check failed:', { isAuthenticated, username });
+        setSaveAttempted(true); // Mark that user tried to save
         setShowAuthModal(true);
         return;
       }
@@ -244,7 +231,10 @@ export default function CreateNewLocationScreen() {
         visible={showAuthModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowAuthModal(false)}
+        onRequestClose={() => {
+          setShowAuthModal(false);
+          router.navigate('/');
+        }}
       >
         <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
           <AuthScreen
@@ -252,11 +242,20 @@ export default function CreateNewLocationScreen() {
               setIsAuthenticated(true);
               setUsername(username);
               setShowAuthModal(false);
-              // Retry save after authentication - skip auth check since we just authenticated
-              handleSave(true);
+              // Only retry save if user previously attempted to save
+              if (saveAttempted) {
+                setSaveAttempted(false);
+                handleSave(true);
+              }
             }}
           />
-          <TouchableOpacity style={styles.closeButton} onPress={() => setShowAuthModal(false)}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => {
+              setShowAuthModal(false);
+              router.navigate('/');
+            }}
+          >
             <Text style={styles.closeButtonText}>{t('cancel')}</Text>
           </TouchableOpacity>
         </View>
