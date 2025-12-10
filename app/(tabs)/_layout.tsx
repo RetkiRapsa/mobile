@@ -137,8 +137,8 @@ export default function TabLayout() {
               setIsAuthenticated(true);
               setUsername(username);
               setShowLoginModal(false);
-              // Navigate to create location screen after successful login
-              router.push('/createNewLocation');
+              // Navigate back to map view after successful login
+              router.push('/');
             }}
           />
           <TouchableOpacity

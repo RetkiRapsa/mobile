@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { useRouter } from 'expo-router';
@@ -545,9 +545,12 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
   // Render
   if (!location || !locationFound) {
     return (
-      <View style={[styles.container, { backgroundColor: '#000' }]}>
+      <View style={[styles.container, { backgroundColor: '#f5f5f5' }]}>
         <View style={styles.centered}>
           <Text style={styles.loadingText}>{loadingError || t('loadingData')}</Text>
+          {!loadingError && (
+            <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 20 }} />
+          )}
           {loadingError && (
             <Text style={[styles.loadingText, { fontSize: 16, marginTop: 20 }]}>
               {t('checkLocationSettings')}
@@ -588,7 +591,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 34,
-    color: '#fff',
+    color: '#333',
   },
   map: {
     width: '100%',

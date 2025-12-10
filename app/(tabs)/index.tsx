@@ -146,10 +146,10 @@ export default function MapScreen() {
       <View
         style={[
           styles.container,
-          { backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+          { backgroundColor: '#f5f5f5', justifyContent: 'center', alignItems: 'center' },
         ]}
       >
-        <Text style={{ color: '#fff', fontSize: 18, textAlign: 'center', paddingHorizontal: 20 }}>
+        <Text style={{ color: '#333', fontSize: 18, textAlign: 'center', paddingHorizontal: 20 }}>
           Kartan lataus epäonnistui.{'\n\n'}
           Sulje ja avaa sovellus uudelleen.
         </Text>
