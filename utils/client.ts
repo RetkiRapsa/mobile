@@ -232,3 +232,6 @@ export const apiCreateLocation = async (data: any) => api.post('', data);
 
 export const apiCreateLocationUpdate = async (id: string, data: any) =>
   api.post(`/${id}/updates`, data);
+
+export const apiDeleteLocationUpdate = async (locationId: string, updateId: string) =>
+  api.delete(`/${locationId}/updates/${updateId}`);

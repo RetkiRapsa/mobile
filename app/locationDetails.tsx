@@ -34,14 +34,62 @@ export default function LocationDetailsScreen() {
   const [updatedTicks, setUpdatedTicks] = useState(false);
   const [lastUpdateCreatedAt, setLastUpdateCreatedAt] = useState<string | undefined>(undefined);
   const [isTooFar, setIsTooFar] = useState(false);
-  const { selectedLocation, setSelectedLocation, identity, setVisibleLocations, visibleLocations } =
-    useAppContext();
+  const {
+    selectedLocation,
+    setSelectedLocation,
+    identity,
+    setVisibleLocations,
+    visibleLocations,
+    username,
+  } = useAppContext();
 
   const location = selectedLocation;
 
   const copyToClipboard = async (text: string) => {
     await Clipboard.setStringAsync(text);
   };
+
+  const handleDeleteUpdate = useCallback(
+    async (updateId: string, updateUsername: string) => {
+      // Check if user owns this update
+      if (!username || username !== updateUsername) {
+        Alert.alert(t('error'), t('cannotDeleteOthersUpdates'));
+        return;
+      }
+
+      // Show confirmation dialog
+      Alert.alert(
+        t('confirmDelete'),
+        t('confirmDeleteUpdateMessage'),
+        [
+          {
+            text: t('cancel'),
+            style: 'cancel',
+          },
+          {
+            text: t('delete'),
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const { apiDeleteLocationUpdate } = await import('@/utils/client');
+                await apiDeleteLocationUpdate(location!.id, updateId);
+
+                // Remove the deleted update from the list
+                setLocationUpdates((prev) => prev.filter((u) => u.id !== updateId));
+
+                Alert.alert(t('success'), t('updateDeleted'));
+              } catch (error) {
+                console.error('Failed to delete update:', error);
+                Alert.alert(t('error'), t('updateDeleteFailed'));
+              }
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+    },
+    [username, location, t]
+  );
 
   useEffect(() => {
     if (!location) return;
@@ -205,6 +253,16 @@ export default function LocationDetailsScreen() {
                         {locationUpdate.created}
                       </Text>
                     </View>
+                    {username && username === locationUpdate.username && (
+                      <TouchableOpacity
+                        onPress={() =>
+                          handleDeleteUpdate(locationUpdate.id, locationUpdate.username!)
+                        }
+                        style={styles.deleteButton}
+                      >
+                        <MaterialCommunityIcons name="delete" size={24} color="#d32f2f" />
+                      </TouchableOpacity>
+                    )}
                   </View>
                   <Text style={[styles.updateMessage, { color: foregroundColor }]}>
                     {locationUpdate.updateText}
@@ -301,6 +359,10 @@ const styles = StyleSheet.create({
   },
   updateMeta: {
     flex: 1,
+  },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   username: {
     fontSize: 16,

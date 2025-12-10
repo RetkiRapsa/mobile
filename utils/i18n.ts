@@ -146,7 +146,13 @@ type TranslationKey =
   | 'errorServiceNotFound'
   | 'errorWrongCredentials'
   | 'errorGenericLogin'
-  | 'errorGenericRegister';
+  | 'errorGenericRegister'
+  | 'confirmDelete'
+  | 'confirmDeleteUpdateMessage'
+  | 'delete'
+  | 'updateDeleted'
+  | 'updateDeleteFailed'
+  | 'cannotDeleteOthersUpdates';
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -322,6 +328,12 @@ const translations: { [locale: string]: Translations } = {
     errorWrongCredentials: 'Väärä käyttäjätunnus tai salasana.',
     errorGenericLogin: 'Kirjautuminen epäonnistui. Yritä uudelleen.',
     errorGenericRegister: 'Rekisteröityminen epäonnistui. Yritä uudelleen.',
+    confirmDelete: 'Vahvista poisto',
+    confirmDeleteUpdateMessage: 'Haluatko varmasti poistaa tämän päivityksen?',
+    delete: 'Poista',
+    updateDeleted: 'Päivitys poistettu onnistuneesti.',
+    updateDeleteFailed: 'Päivityksen poistaminen epäonnistui. Yritä uudelleen.',
+    cannotDeleteOthersUpdates: 'Et voi poistaa muiden käyttäjien päivityksiä.',
   },
   en: {
     locationNotDetermined: 'Location could not be determined',
@@ -491,6 +503,12 @@ const translations: { [locale: string]: Translations } = {
     errorWrongCredentials: 'Wrong username or password.',
     errorGenericLogin: 'Login failed. Please try again.',
     errorGenericRegister: 'Registration failed. Please try again.',
+    confirmDelete: 'Confirm Delete',
+    confirmDeleteUpdateMessage: 'Are you sure you want to delete this update?',
+    delete: 'Delete',
+    updateDeleted: 'Update deleted successfully.',
+    updateDeleteFailed: 'Failed to delete update. Please try again.',
+    cannotDeleteOthersUpdates: "You cannot delete other users' updates.",
   },
 };
 
