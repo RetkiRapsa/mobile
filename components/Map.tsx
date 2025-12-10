@@ -32,6 +32,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
   // Hooks
   const webViewRef = useRef<WebView | null>(null);
   const lastRefreshTimeRef = useRef<number>(0);
+  const hasInitiallyCentered = useRef(false);
   const router = useRouter();
   const { visibleLocations, setVisibleLocations, setSelectedLocation } = useAppContext();
   const { t } = useTranslation();
@@ -129,10 +130,26 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     } else {
       setLocationFound(true);
       setLoadingError(null);
+
+      // Always update user location (blue dot position)
       setUserLocation({ latitude: location.latitude, longitude: location.longitude });
-      resetRegion(location.latitude, location.longitude);
+
+      // Only reset region on initial load, not on location updates
+      if (!hasInitiallyCentered.current && mapLoaded) {
+        devLog('Initial center to user location:', location.latitude, location.longitude);
+        resetRegion(location.latitude, location.longitude);
+        hasInitiallyCentered.current = true;
+      } else {
+        devLog(
+          'Location updated - blue dot will move, map stays in place:',
+          location.latitude,
+          location.longitude,
+          'hasInitiallyCentered:',
+          hasInitiallyCentered.current
+        );
+      }
     }
-  }, [location, resetRegion]);
+  }, [location, resetRegion, t, mapLoaded]);
 
   useEffect(() => {
     if (!location) return;
@@ -189,34 +206,21 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     }
   }, [usingDefaultLocation, locationFound]);
 
-  // Fetch initial locations when map bounds are first available
+  // Fetch initial locations based on GPS location when map is ready
   useEffect(() => {
-    if (mapBounds && !initialFetchDone && locationFound) {
+    if (mapLoaded && !initialFetchDone && locationFound && userLocation) {
       const fetchInitialLocations = async () => {
         try {
-          const centerLat = mapBounds.center.lat;
-          const centerLng = mapBounds.center.lng;
-          const north = mapBounds.north;
-          const east = mapBounds.east;
-
-          // Calculate radius from map bounds (visible area)
-          const latDiff = (north - centerLat) * 111320; // degrees to meters
-          const lngDiff = (east - centerLng) * 111320 * Math.cos((centerLat * Math.PI) / 180);
-          const calculatedRadius = Math.round(Math.sqrt(latDiff * latDiff + lngDiff * lngDiff));
-
-          // Cap at 100km maximum
-          const searchRadius = Math.min(calculatedRadius, 100 * 1000);
-
-          devLog('Fetching initial locations for visible area:', {
-            center: { latitude: centerLat, longitude: centerLng },
-            calculatedRadius: calculatedRadius,
-            searchRadius: searchRadius,
+          devLog('Fetching initial locations from GPS position:', {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+            radius: MAP_SEARCH_RADIUS,
           });
 
           const locations = await getNearbyLocationsFromCoords(
-            centerLat,
-            centerLng,
-            searchRadius,
+            userLocation.latitude,
+            userLocation.longitude,
+            MAP_SEARCH_RADIUS,
             MAP_MAX_SPOTS
           );
           devLog('Fetched initial locations:', locations.length);
@@ -231,7 +235,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
       };
       fetchInitialLocations();
     }
-  }, [mapBounds, initialFetchDone, locationFound, setVisibleLocations]);
+  }, [mapLoaded, initialFetchDone, locationFound, userLocation, setVisibleLocations, t]);
 
   // Handle messages from WebView
   const handleWebViewMessage = useCallback(
@@ -347,8 +351,9 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
 
   // Generate HTML for WebView with Leaflet map
   const htmlContent = useMemo(() => {
-    const initialLat = location?.latitude || DEFAULT_LOCATION_LATITUDE;
-    const initialLon = location?.longitude || DEFAULT_LOCATION_LONGITUDE;
+    // Use initial location or default - this should only be generated ONCE
+    const initialLat = DEFAULT_LOCATION_LATITUDE;
+    const initialLon = DEFAULT_LOCATION_LONGITUDE;
 
     return `
       <!DOCTYPE html>
@@ -535,7 +540,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
         </body>
       </html>
     `;
-  }, [location]);
+  }, []); // Empty dependency array - HTML should only be generated once
 
   // Render
   if (!location || !locationFound) {

@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+
+import * as Location from 'expo-location';
 
 import InfoScreen from '@/app/(tabs)/info';
 import { useAppContext } from '@/app/_layout';
@@ -16,6 +18,7 @@ export default function MapScreen() {
   const [hasError, setHasError] = useState(false);
   const [usingDefaultLocation, setUsingDefaultLocation] = useState(false);
   const { hasReadSplashInfo, setHasReadSplashInfo } = useAppContext();
+  const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
 
   // Only fetch GPS location AFTER splash screen is dismissed
   useEffect(() => {
@@ -33,6 +36,34 @@ export default function MapScreen() {
           devLog('GPS location found:', currentLocation.latitude, currentLocation.longitude);
           setLocation(currentLocation);
           setUsingDefaultLocation(false); // GPS worked
+
+          // Start watching location for continuous updates
+          try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status === 'granted') {
+              devLog('Starting location watch...');
+              locationSubscriptionRef.current = await Location.watchPositionAsync(
+                {
+                  accuracy: Location.Accuracy.Balanced,
+                  timeInterval: 5000, // Update every 5 seconds
+                  distanceInterval: 10, // Or when user moves 10 meters
+                },
+                (newLocation) => {
+                  devLog(
+                    'Location update:',
+                    newLocation.coords.latitude,
+                    newLocation.coords.longitude
+                  );
+                  setLocation({
+                    latitude: newLocation.coords.latitude,
+                    longitude: newLocation.coords.longitude,
+                  });
+                }
+              );
+            }
+          } catch (watchError) {
+            logError('Failed to start location watch:', watchError);
+          }
         } else {
           // GPS failed or timed out - use default Helsinki location as fallback
           // This allows the app to still work and show nearby locations
@@ -56,6 +87,15 @@ export default function MapScreen() {
         setIsLoadingLocation(false);
       }
     })();
+
+    // Cleanup function to stop watching location when component unmounts
+    return () => {
+      if (locationSubscriptionRef.current) {
+        devLog('Stopping location watch...');
+        locationSubscriptionRef.current.remove();
+        locationSubscriptionRef.current = null;
+      }
+    };
   }, [hasReadSplashInfo]); // Only trigger when splash screen is dismissed
 
   if (!hasReadSplashInfo) {
