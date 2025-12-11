@@ -140,6 +140,7 @@ type TranslationKey =
   | 'passwordTooShort'
   | 'usernameInvalidCharacters'
   | 'logoutButton'
+  | 'loggingOut'
   | 'loggedInAs'
   | 'errorTimeout'
   | 'errorNoConnection'
@@ -326,6 +327,7 @@ const translations: { [locale: string]: Translations } = {
     usernameInvalidCharacters:
       'Käyttäjätunnus voi sisältää vain kirjaimia (a-z, å, ä, ö), numeroita (0-9), viivoja (-) ja plus-merkkejä (+)',
     logoutButton: 'Kirjaudu ulos',
+    loggingOut: 'Kirjaudutaan ulos...',
     loggedInAs: 'Kirjautunut käyttäjänä',
     errorTimeout: 'Palvelimeen yhdistäminen aikakatkaistiin. Tarkista internet-yhteytesi.',
     errorNoConnection: 'Ei yhteyttä palvelimeen. Tarkista internet-yhteytesi.',
@@ -506,6 +508,7 @@ const translations: { [locale: string]: Translations } = {
     usernameInvalidCharacters:
       'Username can only contain letters (a-z, å, ä, ö), numbers (0-9), hyphens (-) and plus signs (+)',
     logoutButton: 'Logout',
+    loggingOut: 'Logging out...',
     loggedInAs: 'Logged in as',
     errorTimeout: 'Connection to server timed out. Check your internet connection.',
     errorNoConnection: 'No connection to server. Check your internet connection.',

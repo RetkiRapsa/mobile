@@ -36,6 +36,7 @@ export default function InstructionsScreen() {
     useColorScheme() === 'dark' ? colors.dark.background : colors.light.background;
   const foregroundColor = useColorScheme() === 'dark' ? colors.dark.text : colors.light.text;
   const [deviceId, setDeviceId] = useState<string>('');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     getOrCreateUUID().then(setDeviceId);
@@ -49,11 +50,17 @@ export default function InstructionsScreen() {
   };
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     try {
       await logoutUser();
-      setIsAuthenticated(false);
-      setUsername(null);
+      // Small delay to prevent visual glitch during state transition
+      setTimeout(() => {
+        setIsAuthenticated(false);
+        setUsername(null);
+        setIsLoggingOut(false);
+      }, 100);
     } catch (error) {
+      setIsLoggingOut(false);
       Alert.alert(t('error'), t('unexpectedError'));
     }
   };
@@ -102,8 +109,14 @@ export default function InstructionsScreen() {
             <Text style={{ color: foregroundColor, marginBottom: 5 }}>
               {t('loggedInAs')}: {username}
             </Text>
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Text style={styles.logoutButtonText}>{t('logoutButton')}</Text>
+            <TouchableOpacity
+              style={[styles.logoutButton, isLoggingOut && styles.buttonDisabled]}
+              onPress={handleLogout}
+              disabled={isLoggingOut}
+            >
+              <Text style={styles.logoutButtonText}>
+                {isLoggingOut ? t('loggingOut') : t('logoutButton')}
+              </Text>
             </TouchableOpacity>
           </>
         )}
@@ -154,6 +167,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   loginButton: {
     backgroundColor: '#2e7d32',
