@@ -48,6 +48,8 @@ export default function LocationDetailsScreen() {
     setVisibleLocations,
     visibleLocations,
     username,
+    setReturnToMapCenter,
+    setHasInitiallyCenteredMap,
   } = useAppContext();
 
   const location = selectedLocation;
@@ -143,27 +145,64 @@ export default function LocationDetailsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await apiDeleteLocation(location!.id);
+              // Store location info before deletion
+              const locationIdToDelete = location!.id;
+              const deletedLocationCoords = {
+                latitude: location!.latitude,
+                longitude: location!.longitude,
+              };
+
+              // Store the coordinates to return to after deletion
+              setReturnToMapCenter(deletedLocationCoords);
+
+              // Reset the hasInitiallyCenteredMap flag so the map knows to re-center
+              setHasInitiallyCenteredMap(false);
+
+              // Delete from backend
+              await apiDeleteLocation(locationIdToDelete);
 
               // Remove the deleted location from visible locations
-              const updatedLocations = visibleLocations.filter((loc) => loc.id !== location!.id);
+              const updatedLocations = visibleLocations.filter(
+                (loc) => loc.id !== locationIdToDelete
+              );
               setVisibleLocations(updatedLocations);
 
-              Alert.alert(t('success'), t('locationDeleted'));
+              // Clear selected location
+              setSelectedLocation(null);
 
               // Navigate back to map
-              setSelectedLocation(null);
               router.navigate('/');
-            } catch (error) {
+
+              // Show success message AFTER map has had time to center
+              // This delay ensures the map centers first before showing the alert
+              setTimeout(() => {
+                Alert.alert(t('success'), t('locationDeleted'));
+              }, 1500); // 1.5 seconds to allow map to load and center
+            } catch (error: any) {
               console.error('Failed to delete location:', error);
-              Alert.alert(t('error'), t('locationDeleteFailed'));
+              // Check if it's a permission error
+              if (error.response?.status === 403) {
+                Alert.alert(t('error'), t('cannotDeleteOthersLocations'));
+              } else {
+                Alert.alert(t('error'), t('locationDeleteFailed'));
+              }
             }
           },
         },
       ],
       { cancelable: true }
     );
-  }, [username, location, t, visibleLocations, setVisibleLocations, setSelectedLocation]);
+  }, [
+    username,
+    location,
+    t,
+    visibleLocations,
+    setVisibleLocations,
+    setSelectedLocation,
+    setReturnToMapCenter,
+    setHasInitiallyCenteredMap,
+    router,
+  ]);
 
   useEffect(() => {
     if (!location) return;

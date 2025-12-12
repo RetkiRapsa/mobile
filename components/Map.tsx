@@ -32,9 +32,16 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
   // Hooks
   const webViewRef = useRef<WebView | null>(null);
   const lastRefreshTimeRef = useRef<number>(0);
-  const hasInitiallyCentered = useRef(false);
   const router = useRouter();
-  const { visibleLocations, setVisibleLocations, setSelectedLocation } = useAppContext();
+  const {
+    visibleLocations,
+    setVisibleLocations,
+    setSelectedLocation,
+    hasInitiallyCenteredMap,
+    setHasInitiallyCenteredMap,
+    returnToMapCenter,
+    setReturnToMapCenter,
+  } = useAppContext();
   const { t } = useTranslation();
 
   const [locationFound, setLocationFound] = useState(false);
@@ -113,9 +120,48 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     [sendMessageToMap]
   );
 
+  // Handle returning to specific map center after location deletion
+  // THIS MUST RUN FIRST - defined before other location effects
+  useEffect(() => {
+    if (returnToMapCenter && mapLoaded) {
+      // Immediately center on the deleted location's coordinates
+      resetRegion(returnToMapCenter.latitude, returnToMapCenter.longitude);
+
+      // Always set this flag to prevent other effects from interfering
+      setHasInitiallyCenteredMap(true);
+
+      // Clear the returnToMapCenter state after centering
+      setTimeout(() => {
+        setReturnToMapCenter(null);
+      }, 300);
+    }
+  }, [
+    returnToMapCenter,
+    mapLoaded,
+    resetRegion,
+    setReturnToMapCenter,
+    hasInitiallyCenteredMap,
+    setHasInitiallyCenteredMap,
+  ]);
+
   // Effects
   useEffect(() => {
     if (!location) {
+      return;
+    }
+
+    // Skip if we're handling a returnToMapCenter - that takes priority
+    if (returnToMapCenter) {
+      devLog('Skipping location centering - returnToMapCenter is active');
+      // Still update user location (blue dot) even when returnToMapCenter is active
+      if (
+        location.latitude !== ERROR_LOCATION_LATITUDE &&
+        location.longitude !== ERROR_LOCATION_LONGITUDE
+      ) {
+        setLocationFound(true);
+        setLoadingError(null);
+        setUserLocation({ latitude: location.latitude, longitude: location.longitude });
+      }
       return;
     }
 
@@ -134,22 +180,28 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
       // Always update user location (blue dot position)
       setUserLocation({ latitude: location.latitude, longitude: location.longitude });
 
-      // Only reset region on initial load, not on location updates
-      if (!hasInitiallyCentered.current && mapLoaded) {
+      // Only reset region on initial load
+      if (!hasInitiallyCenteredMap && mapLoaded) {
         devLog('Initial center to user location:', location.latitude, location.longitude);
         resetRegion(location.latitude, location.longitude);
-        hasInitiallyCentered.current = true;
+        setHasInitiallyCenteredMap(true);
       } else {
         devLog(
           'Location updated - blue dot will move, map stays in place:',
           location.latitude,
-          location.longitude,
-          'hasInitiallyCentered:',
-          hasInitiallyCentered.current
+          location.longitude
         );
       }
     }
-  }, [location, resetRegion, t, mapLoaded]);
+  }, [
+    location,
+    resetRegion,
+    t,
+    mapLoaded,
+    hasInitiallyCenteredMap,
+    setHasInitiallyCenteredMap,
+    returnToMapCenter,
+  ]);
 
   useEffect(() => {
     if (!location) return;
@@ -352,9 +404,18 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
 
   // Generate HTML for WebView with Leaflet map
   const htmlContent = useMemo(() => {
-    // Use initial location or default - this should only be generated ONCE
-    const initialLat = DEFAULT_LOCATION_LATITUDE;
-    const initialLon = DEFAULT_LOCATION_LONGITUDE;
+    // If returnToMapCenter is set, use those coordinates for initial center
+    // Otherwise use current location or default Helsinki
+    let initialLat = DEFAULT_LOCATION_LATITUDE;
+    let initialLon = DEFAULT_LOCATION_LONGITUDE;
+
+    if (returnToMapCenter) {
+      initialLat = returnToMapCenter.latitude;
+      initialLon = returnToMapCenter.longitude;
+    } else if (location) {
+      initialLat = location.latitude;
+      initialLon = location.longitude;
+    }
 
     return `
       <!DOCTYPE html>
@@ -541,7 +602,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
         </body>
       </html>
     `;
-  }, []); // Empty dependency array - HTML should only be generated once
+  }, [returnToMapCenter, location]); // Regenerate when returnToMapCenter or location changes
 
   // Render
   if (!location || !locationFound) {

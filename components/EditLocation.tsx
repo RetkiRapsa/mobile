@@ -175,9 +175,6 @@ export default function EditLocation({ location, onClose, onLocationUpdated }: E
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: theme.text }]}>{t('editLocation')}</Text>
-        <TouchableOpacity onPress={onClose} style={styles.closeIconButton}>
-          <MaterialCommunityIcons name="close" size={28} color={theme.text} />
-        </TouchableOpacity>
       </View>
 
       {/* Name Input */}
@@ -257,6 +254,10 @@ export default function EditLocation({ location, onClose, onLocationUpdated }: E
           {loading ? t('loadingData') : t('updateLocation')}
         </Text>
       </TouchableOpacity>
+
+      <TouchableOpacity disabled={loading} style={styles.cancelButton} onPress={onClose}>
+        <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -271,17 +272,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 24,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-  },
-  closeIconButton: {
-    padding: 4,
   },
   inputCard: {
     backgroundColor: '#FFFFFF',
@@ -398,7 +393,7 @@ const styles = StyleSheet.create({
     padding: 18,
     alignItems: 'center',
     marginTop: 8,
-    marginBottom: 40,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -409,5 +404,20 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#d32f2f',
+    marginBottom: 40,
+  },
+  cancelButtonText: {
+    color: '#d32f2f',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });

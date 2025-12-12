@@ -58,11 +58,21 @@ type AuthContextType = {
   setUsername: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
+type MapStateType = {
+  hasInitiallyCenteredMap: boolean;
+  setHasInitiallyCenteredMap: React.Dispatch<React.SetStateAction<boolean>>;
+  returnToMapCenter: { latitude: number; longitude: number } | null;
+  setReturnToMapCenter: React.Dispatch<
+    React.SetStateAction<{ latitude: number; longitude: number } | null>
+  >;
+};
+
 type AppContextType = SplashInfoContextType &
   IdentityContextType &
   VisibleLocationsContextType &
   SelectedLocationContextType &
-  AuthContextType;
+  AuthContextType &
+  MapStateType;
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -82,6 +92,11 @@ function AppProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
+  const [hasInitiallyCenteredMap, setHasInitiallyCenteredMap] = useState<boolean>(false);
+  const [returnToMapCenter, setReturnToMapCenter] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   // Load saved language preference on app start
   useEffect(() => {
@@ -168,6 +183,10 @@ function AppProvider({ children }: { children: React.ReactNode }) {
         setIsAuthenticated,
         username,
         setUsername,
+        hasInitiallyCenteredMap,
+        setHasInitiallyCenteredMap,
+        returnToMapCenter,
+        setReturnToMapCenter,
       }}
     >
       {isCheckingAuth ? (
