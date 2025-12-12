@@ -364,9 +364,9 @@ const translations: { [locale: string]: Translations } = {
     updateDeleteFailed: 'Päivityksen poistaminen epäonnistui. Yritä uudelleen.',
     cannotDeleteOthersUpdates: 'Et voi poistaa muiden käyttäjien päivityksiä.',
     cannotEditOthersUpdates: 'Et voi muokata muiden käyttäjien päivityksiä.',
-    editLocation: 'Muokkaa kohdetta',
+    editLocation: 'Muokkaa',
     updateLocation: 'Päivitä kohde',
-    deleteLocation: 'Poista kohde',
+    deleteLocation: 'Poista',
     confirmDeleteLocation: 'Vahvista poisto',
     confirmDeleteLocationMessage:
       'Haluatko varmasti poistaa tämän kohteen? Kaikki kohteen päivitykset poistetaan myös.',
@@ -565,9 +565,9 @@ const translations: { [locale: string]: Translations } = {
     updateDeleteFailed: 'Failed to delete update. Please try again.',
     cannotDeleteOthersUpdates: "You cannot delete other users' updates.",
     cannotEditOthersUpdates: "You cannot edit other users' updates.",
-    editLocation: 'Edit Location',
+    editLocation: 'Edit',
     updateLocation: 'Update Location',
-    deleteLocation: 'Delete Location',
+    deleteLocation: 'Delete',
     confirmDeleteLocation: 'Confirm Delete',
     confirmDeleteLocationMessage:
       'Are you sure you want to delete this location? All location updates will also be deleted.',
