@@ -224,6 +224,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
             MAP_MAX_SPOTS
           );
           devLog('Fetched initial locations:', locations.length);
+          devLog('First location sample:', locations[0]); // Debug: check if username is present
           setVisibleLocations(locations);
           setLoadingError(null);
           setInitialFetchDone(true); // Mark initial fetch as complete

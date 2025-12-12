@@ -16,6 +16,7 @@ import colors from '@/constants/Colors';
 import { MAP_MAX_SPOTS, MAP_SEARCH_RADIUS } from '@/constants/Location';
 import Location from '@/types/Location';
 import LocationUpdate from '@/types/LocationUpdate';
+import { apiUpdateLocationUpdate } from '@/utils/client';
 import { createLocationUpdate } from '@/utils/createLocationUpdate';
 import getNearbyLocationsFromCoords from '@/utils/getNearbyLocationsFromCoords';
 import { useTranslation } from '@/utils/i18n';
@@ -146,7 +147,6 @@ export default function CreateNewLocationUpdate({
             username: username,
           });
 
-          const { apiUpdateLocationUpdate } = await import('@/utils/client');
           const response = await apiUpdateLocationUpdate(form.locationId, editingUpdate.id, {
             updateText: form.updateText,
             available: form.available,

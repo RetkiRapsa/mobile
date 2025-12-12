@@ -158,6 +158,25 @@ type TranslationKey =
   | 'updateDeleteFailed'
   | 'cannotDeleteOthersUpdates'
   | 'cannotEditOthersUpdates'
+  | 'editLocation'
+  | 'updateLocation'
+  | 'deleteLocation'
+  | 'confirmDeleteLocation'
+  | 'confirmDeleteLocationMessage'
+  | 'locationUpdated'
+  | 'locationUpdateFailed'
+  | 'locationDeleted'
+  | 'locationDeleteFailed'
+  | 'cannotEditOthersLocations'
+  | 'cannotDeleteOthersLocations'
+  | 'enterLocationName'
+  | 'selectLocationType'
+  | 'locationNameRequired'
+  | 'coordinates'
+  | 'setCurrentLocation'
+  | 'locationUpdating'
+  | 'locationCoordinatesUpdated'
+  | 'failedToGetLocation'
   | 'loginTab';
 
 type Translations = {
@@ -345,6 +364,26 @@ const translations: { [locale: string]: Translations } = {
     updateDeleteFailed: 'Päivityksen poistaminen epäonnistui. Yritä uudelleen.',
     cannotDeleteOthersUpdates: 'Et voi poistaa muiden käyttäjien päivityksiä.',
     cannotEditOthersUpdates: 'Et voi muokata muiden käyttäjien päivityksiä.',
+    editLocation: 'Muokkaa kohdetta',
+    updateLocation: 'Päivitä kohde',
+    deleteLocation: 'Poista kohde',
+    confirmDeleteLocation: 'Vahvista poisto',
+    confirmDeleteLocationMessage:
+      'Haluatko varmasti poistaa tämän kohteen? Kaikki kohteen päivitykset poistetaan myös.',
+    locationUpdated: 'Kohde päivitetty onnistuneesti.',
+    locationUpdateFailed: 'Kohteen päivittäminen epäonnistui. Yritä uudelleen.',
+    locationDeleted: 'Kohde poistettu onnistuneesti.',
+    locationDeleteFailed: 'Kohteen poistaminen epäonnistui. Yritä uudelleen.',
+    cannotEditOthersLocations: 'Et voi muokata muiden käyttäjien kohteita.',
+    cannotDeleteOthersLocations: 'Et voi poistaa muiden käyttäjien kohteita.',
+    enterLocationName: 'Anna kohteen nimi',
+    selectLocationType: 'Valitse kohteen tyyppi',
+    locationNameRequired: 'Kohteen nimi on pakollinen.',
+    coordinates: 'Koordinaatit',
+    setCurrentLocation: 'Aseta nykyinen sijainti',
+    locationUpdating: 'Haetaan sijaintia...',
+    locationCoordinatesUpdated: 'Koordinaatit päivitetty nykyiseen sijaintiin.',
+    failedToGetLocation: 'Sijainnin haku epäonnistui. Tarkista sijaintiasetukset.',
     loginTab: 'Kirjaudu',
   },
   en: {
@@ -526,6 +565,26 @@ const translations: { [locale: string]: Translations } = {
     updateDeleteFailed: 'Failed to delete update. Please try again.',
     cannotDeleteOthersUpdates: "You cannot delete other users' updates.",
     cannotEditOthersUpdates: "You cannot edit other users' updates.",
+    editLocation: 'Edit Location',
+    updateLocation: 'Update Location',
+    deleteLocation: 'Delete Location',
+    confirmDeleteLocation: 'Confirm Delete',
+    confirmDeleteLocationMessage:
+      'Are you sure you want to delete this location? All location updates will also be deleted.',
+    locationUpdated: 'Location updated successfully.',
+    locationUpdateFailed: 'Failed to update location. Please try again.',
+    locationDeleted: 'Location deleted successfully.',
+    locationDeleteFailed: 'Failed to delete location. Please try again.',
+    cannotEditOthersLocations: "You cannot edit other users' locations.",
+    cannotDeleteOthersLocations: "You cannot delete other users' locations.",
+    enterLocationName: 'Enter location name',
+    selectLocationType: 'Select location type',
+    locationNameRequired: 'Location name is required.',
+    coordinates: 'Coordinates',
+    setCurrentLocation: 'Set current location',
+    locationUpdating: 'Getting location...',
+    locationCoordinatesUpdated: 'Coordinates updated to current location.',
+    failedToGetLocation: 'Failed to get location. Check location settings.',
     loginTab: 'Login',
   },
 };

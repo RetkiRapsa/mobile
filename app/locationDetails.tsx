@@ -3,11 +3,14 @@ import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import * as Clipboard from 'expo-clipboard';
+import { useRouter } from 'expo-router';
 
 import { useAppContext } from '@/app/_layout';
 import CreateNewLocationUpdate from '@/components/CreateNewLocationUpdate';
+import EditLocation from '@/components/EditLocation';
 import colors from '@/constants/Colors';
 import LocationUpdate from '@/types/LocationUpdate';
+import { apiDeleteLocation, apiDeleteLocationUpdate } from '@/utils/client';
 import getLocationUpdates from '@/utils/getLocationUpdates';
 import { isTooFarFromLocation } from '@/utils/getNearbyLocationsFromCoords';
 import { getCurrentGpsLocation } from '@/utils/gps';
@@ -25,6 +28,7 @@ function TabBarIcon(props: {
 
 export default function LocationDetailsScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
   const backgroundColor = colors.light.background;
   const footerBackgroundColor = '#ffffff';
   const footerBorderColor = '#cccccc';
@@ -32,6 +36,7 @@ export default function LocationDetailsScreen() {
   const [locationUpdates, setLocationUpdates] = useState<LocationUpdate[]>([]);
   const [addLocationUpdate, setAddLocationUpdate] = useState(false);
   const [editingUpdate, setEditingUpdate] = useState<LocationUpdate | null>(null);
+  const [editingLocation, setEditingLocation] = useState(false);
   const [updatedAvailable, setUpdatedAvailable] = useState(false);
   const [updatedTicks, setUpdatedTicks] = useState(false);
   const [lastUpdateCreatedAt, setLastUpdateCreatedAt] = useState<string | undefined>(undefined);
@@ -73,7 +78,6 @@ export default function LocationDetailsScreen() {
             style: 'destructive',
             onPress: async () => {
               try {
-                const { apiDeleteLocationUpdate } = await import('@/utils/client');
                 await apiDeleteLocationUpdate(location!.id, updateId);
 
                 // Remove the deleted update from the list
@@ -107,6 +111,59 @@ export default function LocationDetailsScreen() {
     },
     [username, t]
   );
+
+  const handleEditLocation = useCallback(() => {
+    // Check if user owns this location
+    if (!username || username !== location?.username) {
+      Alert.alert(t('error'), t('cannotEditOthersLocations'));
+      return;
+    }
+
+    setEditingLocation(true);
+  }, [username, location, t]);
+
+  const handleDeleteLocation = useCallback(async () => {
+    // Check if user owns this location
+    if (!username || username !== location?.username) {
+      Alert.alert(t('error'), t('cannotDeleteOthersLocations'));
+      return;
+    }
+
+    // Show confirmation dialog
+    Alert.alert(
+      t('confirmDeleteLocation'),
+      t('confirmDeleteLocationMessage'),
+      [
+        {
+          text: t('cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await apiDeleteLocation(location!.id);
+
+              // Remove the deleted location from visible locations
+              const updatedLocations = visibleLocations.filter((loc) => loc.id !== location!.id);
+              setVisibleLocations(updatedLocations);
+
+              Alert.alert(t('success'), t('locationDeleted'));
+
+              // Navigate back to map
+              setSelectedLocation(null);
+              router.navigate('/');
+            } catch (error) {
+              console.error('Failed to delete location:', error);
+              Alert.alert(t('error'), t('locationDeleteFailed'));
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  }, [username, location, t, visibleLocations, setVisibleLocations, setSelectedLocation]);
 
   useEffect(() => {
     if (!location) return;
@@ -208,7 +265,19 @@ export default function LocationDetailsScreen() {
         }}
       />
     );
+  } else if (editingLocation) {
+    return (
+      <EditLocation
+        location={selectedLocation}
+        onClose={() => setEditingLocation(false)}
+        onLocationUpdated={(updatedLocation) => {
+          setSelectedLocation(updatedLocation);
+          setEditingLocation(false);
+        }}
+      />
+    );
   } else {
+    console.log(selectedLocation);
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor }} edges={['bottom']}>
         <ScrollView
@@ -237,6 +306,23 @@ export default function LocationDetailsScreen() {
             <Text style={[styles.statusText, { color: foregroundColor }]}>
               {t('ticksDetected')}: {updatedTicks ? t('yes') : t('no')}
             </Text>
+
+            {/* Location owner actions */}
+            {username && username === selectedLocation.username && (
+              <View style={styles.locationActions}>
+                <TouchableOpacity onPress={handleEditLocation} style={styles.locationEditButton}>
+                  <MaterialCommunityIcons name="pencil" size={20} color="#FFFFFF" />
+                  <Text style={styles.locationActionText}>{t('editLocation')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleDeleteLocation}
+                  style={styles.locationDeleteButton}
+                >
+                  <MaterialCommunityIcons name="delete" size={20} color="#FFFFFF" />
+                  <Text style={styles.locationActionText}>{t('deleteLocation')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             <View style={styles.updatesSection}>
               <Text
@@ -436,6 +522,45 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 20,
     marginBottom: 80,
+  },
+  locationActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  locationEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1976d2',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  locationDeleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#d32f2f',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  locationActionText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   footerBar: {
     flexDirection: 'row',

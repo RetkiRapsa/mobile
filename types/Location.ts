@@ -1,3 +1,4 @@
+// Location type definition
 export default interface Location {
   id: string;
   available: boolean;
@@ -8,4 +9,5 @@ export default interface Location {
   longitude: number;
   timestamp: string;
   device: string;
+  username?: string; // Username of the user who created this location
 }

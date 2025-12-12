@@ -28,6 +28,12 @@ export default function InfoScreen({
 
         <Text style={styles.intro}>{t('infoIntro')}</Text>
 
+        <View style={styles.section}>
+          <Text style={styles.heading}>{t('infoNoRegistrationTitle')}</Text>
+          <Text style={styles.text}>{t('infoNoRegistrationText1')}</Text>
+          <Text style={styles.text}>{t('infoNoRegistrationText2')}</Text>
+        </View>
+
         <View style={[styles.section, { backgroundColor }]}>
           <Text style={styles.heading}>{t('infoSearchTitle')}</Text>
           <Text style={styles.text}>{t('infoSearchText1')}</Text>
@@ -60,12 +66,6 @@ export default function InfoScreen({
           <Text style={styles.text}>{t('infoMissingLocationText2')}</Text>
           <Text style={styles.text}>{t('infoMissingLocationText3')}</Text>
           <Text style={styles.text}>{t('infoMissingLocationText4')}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.heading}>{t('infoNoRegistrationTitle')}</Text>
-          <Text style={styles.text}>{t('infoNoRegistrationText1')}</Text>
-          <Text style={styles.text}>{t('infoNoRegistrationText2')}</Text>
         </View>
 
         <View style={styles.section}>

@@ -238,3 +238,8 @@ export const apiUpdateLocationUpdate = async (locationId: string, updateId: stri
 
 export const apiDeleteLocationUpdate = async (locationId: string, updateId: string) =>
   api.delete(`/${locationId}/updates/${updateId}`);
+
+export const apiUpdateLocation = async (locationId: string, data: any) =>
+  api.put(`/${locationId}`, data);
+
+export const apiDeleteLocation = async (locationId: string) => api.delete(`/${locationId}`);
