@@ -127,6 +127,23 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
       // Immediately center on the deleted location's coordinates
       resetRegion(returnToMapCenter.latitude, returnToMapCenter.longitude);
 
+      // Fetch nearby locations at the deleted location's coordinates
+      const fetchNearbyAfterDeletion = async () => {
+        try {
+          devLog('Fetching nearby locations after deletion at:', returnToMapCenter);
+          const locations = await getNearbyLocationsFromCoords(
+            returnToMapCenter.latitude,
+            returnToMapCenter.longitude,
+            MAP_SEARCH_RADIUS,
+            MAP_MAX_SPOTS
+          );
+          setVisibleLocations(locations);
+        } catch (error) {
+          logError('Failed to fetch locations after deletion:', error);
+        }
+      };
+      fetchNearbyAfterDeletion();
+
       // Always set this flag to prevent other effects from interfering
       setHasInitiallyCenteredMap(true);
 
@@ -142,6 +159,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     setReturnToMapCenter,
     hasInitiallyCenteredMap,
     setHasInitiallyCenteredMap,
+    setVisibleLocations,
   ]);
 
   // Effects

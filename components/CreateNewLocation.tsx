@@ -169,13 +169,13 @@ export default function CreateNewLocationScreen() {
   // Render
   return (
     <ScrollView contentContainerStyle={[styles.content, { backgroundColor: theme.background }]}>
-      {/* Info Card */}
+      {/* Info Card - First */}
       <View style={styles.infoCard}>
         <MaterialCommunityIcons name="information" size={24} color="#2e7d32" />
         <Text style={styles.infoText}>{t('gpsLocationNote')}</Text>
       </View>
 
-      {/* Name Input Card */}
+      {/* Location Name - Second */}
       <View style={styles.inputCard}>
         <Text style={styles.sectionLabel}>{t('locationName')}</Text>
         <TextInput
@@ -187,7 +187,7 @@ export default function CreateNewLocationScreen() {
         />
       </View>
 
-      {/* Type Selection Card */}
+      {/* Location Type - Third */}
       <View style={styles.typeCard}>
         <Text style={styles.sectionLabel}>{t('locationType')}</Text>
         <View style={styles.typeGrid}>
@@ -266,8 +266,8 @@ export default function CreateNewLocationScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    padding: 20,
-    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     flexGrow: 1,
   },
   infoCard: {
@@ -276,7 +276,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8f5e9',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 24,
+    marginTop: 16,
+    marginBottom: 20,
     borderLeftWidth: 4,
     borderLeftColor: '#2e7d32',
   },
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 24,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

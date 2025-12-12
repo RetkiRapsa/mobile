@@ -152,13 +152,7 @@ export default function LocationDetailsScreen() {
                 longitude: location!.longitude,
               };
 
-              // Store the coordinates to return to after deletion
-              setReturnToMapCenter(deletedLocationCoords);
-
-              // Reset the hasInitiallyCenteredMap flag so the map knows to re-center
-              setHasInitiallyCenteredMap(false);
-
-              // Delete from backend
+              // Delete from backend first
               await apiDeleteLocation(locationIdToDelete);
 
               // Remove the deleted location from visible locations
@@ -167,17 +161,22 @@ export default function LocationDetailsScreen() {
               );
               setVisibleLocations(updatedLocations);
 
+              // Store the coordinates to return to and refresh the map
+              setReturnToMapCenter(deletedLocationCoords);
+
+              // Reset the hasInitiallyCenteredMap flag so the map re-centers
+              setHasInitiallyCenteredMap(false);
+
               // Clear selected location
               setSelectedLocation(null);
 
-              // Navigate back to map
-              router.navigate('/');
+              // Navigate back to map immediately - this will trigger map refresh
+              router.back();
 
-              // Show success message AFTER map has had time to center
-              // This delay ensures the map centers first before showing the alert
+              // Show success message after navigation completes
               setTimeout(() => {
                 Alert.alert(t('success'), t('locationDeleted'));
-              }, 1500); // 1.5 seconds to allow map to load and center
+              }, 800);
             } catch (error: any) {
               console.error('Failed to delete location:', error);
               // Check if it's a permission error
