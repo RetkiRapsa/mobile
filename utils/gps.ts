@@ -15,9 +15,11 @@ export const getCurrentGpsLocation = async () => {
 
     devLog('Getting current position...');
 
-    // Add timeout to prevent hanging - increased to 30 seconds for production
+    // Use BestForNavigation for highest accuracy (GPS-based, ~5-10m accuracy)
+    // This matches Google Maps accuracy and is essential for outdoor location apps
+    // Note: Uses more battery but provides accurate coordinates for camping spots, etc.
     const locationPromise = Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
+      accuracy: Location.Accuracy.BestForNavigation,
       timeInterval: 10000,
       distanceInterval: 0,
     });
@@ -32,7 +34,8 @@ export const getCurrentGpsLocation = async () => {
     const loc = await Promise.race([locationPromise, timeoutPromise]);
 
     if (loc) {
-      devLog('Location found:', loc.coords.latitude, loc.coords.longitude);
+      const accuracy = loc.coords.accuracy ? `±${Math.round(loc.coords.accuracy)}m` : 'unknown';
+      devLog('Location found:', loc.coords.latitude, loc.coords.longitude, 'accuracy:', accuracy);
       return loc.coords;
     } else {
       devLog('Location fetch timed out');

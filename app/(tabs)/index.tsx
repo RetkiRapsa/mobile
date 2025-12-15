@@ -44,15 +44,20 @@ export default function MapScreen() {
               devLog('Starting location watch...');
               locationSubscriptionRef.current = await Location.watchPositionAsync(
                 {
-                  accuracy: Location.Accuracy.Balanced,
+                  accuracy: Location.Accuracy.BestForNavigation, // High accuracy GPS
                   timeInterval: 5000, // Update every 5 seconds
                   distanceInterval: 10, // Or when user moves 10 meters
                 },
                 (newLocation) => {
+                  const accuracy = newLocation.coords.accuracy
+                    ? `±${Math.round(newLocation.coords.accuracy)}m`
+                    : 'unknown';
                   devLog(
                     'Location update:',
                     newLocation.coords.latitude,
-                    newLocation.coords.longitude
+                    newLocation.coords.longitude,
+                    'accuracy:',
+                    accuracy
                   );
                   setLocation({
                     latitude: newLocation.coords.latitude,
