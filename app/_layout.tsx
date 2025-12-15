@@ -15,6 +15,7 @@ import {
   clearToken,
   getStoredUsername,
 } from '@/utils/auth';
+import { setAuthFailureCallback } from '@/utils/client';
 import { loadSavedLocale, useTranslation } from '@/utils/i18n';
 import getOrCreateUUID from '@/utils/identity';
 import { splashInfoSeen } from '@/utils/splashInfo';
@@ -103,6 +104,21 @@ function AppProvider({ children }: { children: React.ReactNode }) {
     loadSavedLocale().catch((error) => {
       console.error('Failed to load saved locale:', error);
     });
+  }, []);
+
+  // Set up auth failure callback for API client
+  useEffect(() => {
+    const handleAuthFailure = () => {
+      console.log('[Auth] Auth failure detected from API - clearing auth state');
+      setIsAuthenticated(false);
+      setUsername(null);
+    };
+
+    setAuthFailureCallback(handleAuthFailure);
+
+    return () => {
+      setAuthFailureCallback(null);
+    };
   }, []);
 
   // Check authentication status on app start

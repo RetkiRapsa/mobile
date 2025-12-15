@@ -15,6 +15,16 @@ const API_URL = `${protocol}://${RETKIRAPSA_API_DOMAIN}/locations`;
 const REQUEST_TIMEOUT = 15000; // 15 seconds
 const MAX_RETRIES = 2;
 
+// Callback to update auth state in app context
+let onAuthFailureCallback: (() => void) | null = null;
+
+/**
+ * Set callback to be called when authentication fails
+ */
+export function setAuthFailureCallback(callback: (() => void) | null) {
+  onAuthFailureCallback = callback;
+}
+
 // Log the API configuration on startup
 devLog('API Client configured:', {
   domain: RETKIRAPSA_API_DOMAIN,
@@ -100,6 +110,13 @@ api.interceptors.request.use(async (config) => {
 
       if (!token) {
         logError('ERROR: No token available for write operation');
+
+        // Call auth failure callback to update app state
+        if (onAuthFailureCallback) {
+          devLog('Calling auth failure callback due to missing/expired token...');
+          onAuthFailureCallback();
+        }
+
         return Promise.reject(new Error('Autentikointi puuttuu. Kirjaudu sisään.'));
       }
 
@@ -187,6 +204,13 @@ api.interceptors.response.use(
 
       devLog('Clearing token from storage due to 403...');
       await clearToken();
+
+      // Call the auth failure callback to update app context
+      if (onAuthFailureCallback) {
+        devLog('Calling auth failure callback to update app state...');
+        onAuthFailureCallback();
+      }
+
       devLog('=== END 403 HANDLING ===');
       // Let the error propagate so the app can show login screen
     }

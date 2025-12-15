@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, AppStateStatus, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { useRouter } from 'expo-router';
@@ -32,6 +32,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
   // Hooks
   const webViewRef = useRef<WebView | null>(null);
   const lastRefreshTimeRef = useRef<number>(0);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const router = useRouter();
   const {
     visibleLocations,
@@ -60,6 +61,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     west: number;
     center: { lat: number; lng: number };
   } | null>(null);
+  const [mapKey, setMapKey] = useState<number>(0);
 
   // Helpers
   const sendMessageToMap = useCallback(
@@ -161,6 +163,31 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
     setHasInitiallyCenteredMap,
     setVisibleLocations,
   ]);
+
+  // Handle app state changes - remount map if app was backgrounded for too long
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      const previousAppState = appStateRef.current;
+
+      // If app is coming to foreground from background/inactive
+      if (previousAppState.match(/inactive|background/) && nextAppState === 'active') {
+        devLog('App returned to foreground, checking map state...');
+
+        // If map was loaded before, remount it to ensure it renders properly
+        if (mapLoaded) {
+          devLog('Remounting map after app resume...');
+          setMapKey((prev) => prev + 1);
+          setMapLoaded(false); // Reset map loaded state
+        }
+      }
+
+      appStateRef.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [mapLoaded]);
 
   // Effects
   useEffect(() => {
@@ -644,6 +671,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
   return (
     <>
       <WebView
+        key={mapKey}
         ref={webViewRef}
         source={{ html: htmlContent }}
         style={styles.map}

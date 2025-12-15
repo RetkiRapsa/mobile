@@ -78,7 +78,8 @@ export async function getValidToken(): Promise<string | null> {
 export async function clearToken(): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
-    devLog('Token cleared from storage');
+    await SecureStore.deleteItemAsync(USERNAME_KEY);
+    devLog('Token and username cleared from storage');
   } catch (error) {
     logError('Failed to clear token:', error);
   }
