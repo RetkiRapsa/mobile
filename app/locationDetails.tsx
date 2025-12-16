@@ -116,18 +116,18 @@ export default function LocationDetailsScreen() {
   );
 
   const handleEditLocation = useCallback(() => {
-    // Check if user owns this location
-    if (!username || username !== location?.username) {
+    // Check if user owns this location or is an admin
+    if (!username || (username !== location?.username && !isAdmin)) {
       Alert.alert(t('error'), t('cannotEditOthersLocations'));
       return;
     }
 
     setEditingLocation(true);
-  }, [username, location, t]);
+  }, [username, location, isAdmin, t]);
 
   const handleDeleteLocation = useCallback(async () => {
-    // Check if user owns this location
-    if (!username || username !== location?.username) {
+    // Check if user owns this location or is an admin
+    if (!username || (username !== location?.username && !isAdmin)) {
       Alert.alert(t('error'), t('cannotDeleteOthersLocations'));
       return;
     }
@@ -195,6 +195,7 @@ export default function LocationDetailsScreen() {
   }, [
     username,
     location,
+    isAdmin,
     t,
     visibleLocations,
     setVisibleLocations,
@@ -347,7 +348,7 @@ export default function LocationDetailsScreen() {
             </Text>
 
             {/* Location owner actions */}
-            {username && username === selectedLocation.username && (
+            {username && (username === selectedLocation.username || isAdmin) && (
               <View style={styles.locationActions}>
                 <TouchableOpacity onPress={handleEditLocation} style={styles.locationEditButton}>
                   <MaterialCommunityIcons name="pencil" size={20} color="#FFFFFF" />
