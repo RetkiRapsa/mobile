@@ -11,7 +11,7 @@ const isLocalDevelopment =
   RETKIRAPSA_API_DOMAIN.includes('192.168.') ||
   RETKIRAPSA_API_DOMAIN.includes('10.0.');
 const protocol = isLocalDevelopment ? 'http' : 'https';
-const API_URL = `${protocol}://${RETKIRAPSA_API_DOMAIN}/locations`;
+const API_URL = `${protocol}://${RETKIRAPSA_API_DOMAIN}`;
 const REQUEST_TIMEOUT = 15000; // 15 seconds
 const MAX_RETRIES = 2;
 
@@ -246,7 +246,7 @@ api.interceptors.response.use(
 );
 
 export const apiGetLocationUpdates = async (id: string, limit = 20) =>
-  api.get(`/${id}/updates`, { params: { limit } });
+  api.get(`/locations/${id}/updates`, { params: { limit } });
 
 export const apiGetNearbyLocations = async (
   lat: number,
@@ -255,23 +255,24 @@ export const apiGetNearbyLocations = async (
   limit = 20
 ) => {
   devLog('apiGetNearbyLocations called with:', { lat, lon, distance, limit });
-  return api.get(`/nearby`, {
+  return api.get(`/locations/nearby`, {
     params: { lat, lon, distance, limit },
   });
 };
 
-export const apiCreateLocation = async (data: any) => api.post('', data);
+export const apiCreateLocation = async (data: any) => api.post('/locations', data);
 
 export const apiCreateLocationUpdate = async (id: string, data: any) =>
-  api.post(`/${id}/updates`, data);
+  api.post(`/locations/${id}/updates`, data);
 
 export const apiUpdateLocationUpdate = async (locationId: string, updateId: string, data: any) =>
-  api.put(`/${locationId}/updates/${updateId}`, data);
+  api.put(`/locations/${locationId}/updates/${updateId}`, data);
 
 export const apiDeleteLocationUpdate = async (locationId: string, updateId: string) =>
-  api.delete(`/${locationId}/updates/${updateId}`);
+  api.delete(`/locations/${locationId}/updates/${updateId}`);
 
 export const apiUpdateLocation = async (locationId: string, data: any) =>
-  api.put(`/${locationId}`, data);
+  api.put(`/locations/${locationId}`, data);
 
-export const apiDeleteLocation = async (locationId: string) => api.delete(`/${locationId}`);
+export const apiDeleteLocation = async (locationId: string) =>
+  api.delete(`/locations/${locationId}`);

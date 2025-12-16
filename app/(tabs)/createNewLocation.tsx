@@ -1,12 +1,12 @@
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import CreateNewLocation from '@/components/CreateNewLocation';
+import CreateNewLocationScreen from '@/components/CreateNewLocation';
 
 export default function CreateScreen() {
   return (
     <SafeAreaView style={styles.container} edges={[]}>
-      <CreateNewLocation />
+      <CreateNewLocationScreen />
     </SafeAreaView>
   );
 }

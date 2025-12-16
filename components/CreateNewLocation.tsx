@@ -55,7 +55,11 @@ const getIconName = (type: string) => {
   }
 };
 
-export default function CreateNewLocationScreen() {
+interface CreateNewLocationScreenProps {
+  onClose?: () => void;
+}
+
+export default function CreateNewLocationScreen({ onClose }: CreateNewLocationScreenProps) {
   const { t, locale } = useTranslation();
   const router = useRouter();
   const {
@@ -157,7 +161,11 @@ export default function CreateNewLocationScreen() {
           });
           setVisibleLocations([...(visibleLocations || []), newLocation]);
           Alert.alert(`${newLocation.name} ${t('locationAdded')}`);
-          router.navigate('/');
+          if (onClose) {
+            onClose();
+          } else {
+            router.navigate('/');
+          }
         }
       } catch {
         Alert.alert(t('error'), t('locationAddFailed'));
@@ -234,7 +242,11 @@ export default function CreateNewLocationScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => {
           setShowAuthModal(false);
-          router.navigate('/');
+          if (onClose) {
+            onClose();
+          } else {
+            router.navigate('/');
+          }
         }}
       >
         <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
@@ -255,7 +267,11 @@ export default function CreateNewLocationScreen() {
             style={styles.closeButton}
             onPress={() => {
               setShowAuthModal(false);
-              router.navigate('/');
+              if (onClose) {
+                onClose();
+              } else {
+                router.navigate('/');
+              }
             }}
           >
             <Text style={styles.closeButtonText}>{t('cancel')}</Text>

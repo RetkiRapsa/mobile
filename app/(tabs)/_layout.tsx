@@ -5,11 +5,15 @@ import { Link, Tabs, useRouter } from 'expo-router';
 
 import { useAppContext } from '@/app/_layout';
 import AuthScreen from '@/components/AuthScreen';
+import CreateNewLocation from '@/components/CreateNewLocation';
+import FavoriteLocationsScreen from '@/components/FavoriteLocationsScreen';
+import MenuScreen from '@/components/MenuScreen';
 import { Text } from '@/components/Themed';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import colors from '@/constants/Colors';
+import Location from '@/types/Location';
 import { useTranslation } from '@/utils/i18n';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -56,6 +60,9 @@ export default function TabLayout() {
   const isLoggedIn = isAuthenticated && username;
   const router = useRouter();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showNewLocationModal, setShowNewLocationModal] = useState(false);
+  const [showFavoritesModal, setShowFavoritesModal] = useState(false);
   const backgroundColor = colors.light.background;
 
   // No early returns or conditional hooks
@@ -78,46 +85,46 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="menu"
+          options={{
+            title: t('menu'),
+            headerTitle: t('menu'),
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons
+                name="menu"
+                size={28}
+                color={color}
+                style={{ marginBottom: -3 }}
+              />
+            ),
+            headerRight: () => <HeaderRightIcon />,
+          }}
+        />
+        <Tabs.Screen
           name="createNewLocation"
           options={{
-            title: isLoggedIn ? t('tabNew') : t('loginTab'),
-            headerTitle: isLoggedIn ? t('headerNewLocation') : t('loginTitle'),
-            tabBarIcon: ({ color }) =>
-              isLoggedIn ? (
-                <TabBarIcon name="plus" color={color} />
-              ) : (
-                <MaterialCommunityIcons
-                  name="login"
-                  size={28}
-                  color={color}
-                  style={{ marginBottom: -3 }}
-                />
-              ),
+            href: null, // Hidden from tab bar, but accessible via navigation
+            title: t('headerNewLocation'),
+            headerTitle: t('headerNewLocation'),
+            tabBarIcon: ({ color }) => <TabBarIcon name="plus" color={color} />,
             headerRight: () => <HeaderRightIcon />,
-            tabBarButton: (props) => {
-              // If not logged in, show login modal instead of navigating
-              if (!isLoggedIn) {
-                const { children, style } = props;
-                return (
-                  <TouchableOpacity
-                    style={style}
-                    onPress={() => {
-                      setShowLoginModal(true);
-                    }}
-                    activeOpacity={0.2}
-                  >
-                    {children}
-                  </TouchableOpacity>
-                );
-              }
-              // If logged in, use default behavior
-              const { children, style, onPress } = props;
-              return (
-                <TouchableOpacity style={style} onPress={onPress} activeOpacity={0.2}>
-                  {children}
-                </TouchableOpacity>
-              );
-            },
+          }}
+        />
+        <Tabs.Screen
+          name="favorites"
+          options={{
+            href: null, // Hidden from tab bar, but accessible via navigation
+            title: t('favoriteLocations'),
+            headerTitle: t('favoriteLocations'),
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons
+                name="heart"
+                size={28}
+                color={color}
+                style={{ marginBottom: -3 }}
+              />
+            ),
+            headerRight: () => <HeaderRightIcon />,
           }}
         />
         <Tabs.Screen

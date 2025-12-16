@@ -177,7 +177,34 @@ type TranslationKey =
   | 'locationUpdating'
   | 'locationCoordinatesUpdated'
   | 'failedToGetLocation'
-  | 'loginTab';
+  | 'loginTab'
+  | 'menu'
+  | 'favoriteLocations'
+  | 'logout'
+  | 'logoutConfirm'
+  | 'register'
+  | 'newLocation'
+  | 'login'
+  | 'noFavorites'
+  | 'noFavoritesDescription'
+  | 'removeFavorite'
+  | 'removeFavoriteConfirm'
+  | 'remove'
+  | 'failedToLoadFavorites'
+  | 'failedToRemoveFavorite'
+  | 'addToFavorites'
+  | 'removeFromFavorites'
+  | 'favoriteAdded'
+  | 'favoriteRemoved'
+  | 'failedToAddFavorite'
+  | 'available'
+  | 'notAvailable'
+  | 'ticks'
+  | 'unnamedLocation'
+  | 'thisLocation'
+  | 'authenticationRequired'
+  | 'pleaseLoginToUseFavorites'
+  | 'ok';
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -385,6 +412,34 @@ const translations: { [locale: string]: Translations } = {
     locationCoordinatesUpdated: 'Koordinaatit päivitetty nykyiseen sijaintiin.',
     failedToGetLocation: 'Sijainnin haku epäonnistui. Tarkista sijaintiasetukset.',
     loginTab: 'Kirjaudu',
+    menu: 'Valinnat',
+    favoriteLocations: 'Suosikkikohteet',
+    logout: 'Kirjaudu ulos',
+    logoutConfirm: 'Haluatko varmasti kirjautua ulos?',
+    register: 'Rekisteröidy',
+    newLocation: 'Uusi kohde',
+    login: 'Kirjaudu sisään',
+    noFavorites: 'Ei suosikkikohteita',
+    noFavoritesDescription:
+      'Lisää kohteita suosikkeihisi napauttamalla sydän-kuvaketta kohteen sivulla.',
+    removeFavorite: 'Poista suosikeista',
+    removeFavoriteConfirm: 'Haluatko varmasti poistaa kohteen "{name}" suosikeista?',
+    remove: 'Poista',
+    failedToLoadFavorites: 'Suosikkikohteiden lataaminen epäonnistui.',
+    failedToRemoveFavorite: 'Suosikin poistaminen epäonnistui.',
+    addToFavorites: 'Lisää suosikkeihin',
+    removeFromFavorites: 'Poista suosikeista',
+    favoriteAdded: 'Kohde lisätty suosikkeihin',
+    favoriteRemoved: 'Kohde poistettu suosikeista',
+    failedToAddFavorite: 'Suosikin lisääminen epäonnistui',
+    available: 'Käytössä',
+    notAvailable: 'Ei käytössä',
+    ticks: 'Punkkeja',
+    unnamedLocation: 'Nimeämätön kohde',
+    thisLocation: 'tämä kohde',
+    authenticationRequired: 'Kirjautuminen vaaditaan',
+    pleaseLoginToUseFavorites: 'Kirjaudu sisään käyttääksesi suosikkeja.',
+    ok: 'OK',
   },
   en: {
     locationNotDetermined: 'Location could not be determined',
@@ -586,6 +641,34 @@ const translations: { [locale: string]: Translations } = {
     locationCoordinatesUpdated: 'Coordinates updated to current location.',
     failedToGetLocation: 'Failed to get location. Check location settings.',
     loginTab: 'Login',
+    menu: 'Options',
+    favoriteLocations: 'Favorite Locations',
+    logout: 'Logout',
+    logoutConfirm: 'Are you sure you want to log out?',
+    register: 'Register',
+    newLocation: 'New Location',
+    login: 'Login',
+    noFavorites: 'No favorite locations',
+    noFavoritesDescription:
+      'Add locations to your favorites by tapping the heart icon on the location page.',
+    removeFavorite: 'Remove from favorites',
+    removeFavoriteConfirm: 'Are you sure you want to remove "{name}" from favorites?',
+    remove: 'Remove',
+    failedToLoadFavorites: 'Failed to load favorite locations.',
+    failedToRemoveFavorite: 'Failed to remove favorite.',
+    addToFavorites: 'Add to favorites',
+    removeFromFavorites: 'Remove from favorites',
+    favoriteAdded: 'Location added to favorites',
+    favoriteRemoved: 'Location removed from favorites',
+    failedToAddFavorite: 'Failed to add favorite',
+    available: 'Available',
+    notAvailable: 'Not available',
+    ticks: 'Ticks',
+    unnamedLocation: 'Unnamed location',
+    thisLocation: 'this location',
+    authenticationRequired: 'Authentication Required',
+    pleaseLoginToUseFavorites: 'Please log in to use favorites.',
+    ok: 'OK',
   },
 };
 
