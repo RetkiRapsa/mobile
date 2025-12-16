@@ -12,13 +12,13 @@ import {
   View,
 } from 'react-native';
 
-import { loginUser, registerUser } from '@/utils/auth';
+import { getStoredIsAdmin, loginUser, registerUser } from '@/utils/auth';
 import { useTranslation } from '@/utils/i18n';
 import { devLog } from '@/utils/logger';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface AuthScreenProps {
-  onAuthSuccess: (username: string) => void;
+  onAuthSuccess: (username: string, isAdmin: boolean) => void;
 }
 
 export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
@@ -64,7 +64,9 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       } else {
         await registerUser(username.trim(), password);
       }
-      onAuthSuccess(username.trim());
+      // Retrieve admin status after successful authentication
+      const isAdmin = await getStoredIsAdmin();
+      onAuthSuccess(username.trim(), isAdmin);
     } catch (error: any) {
       // Use devLog instead of logError since these are expected user errors (wrong password, etc.)
       devLog('Auth error:', error.message || error);

@@ -31,7 +31,8 @@ const Separator: React.FC = () => (
 
 export default function InstructionsScreen() {
   const { t } = useTranslation();
-  const { username, isAuthenticated, setIsAuthenticated, setUsername } = useAppContext();
+  const { username, isAuthenticated, setIsAuthenticated, setUsername, setIsAdmin } =
+    useAppContext();
   const backgroundColor =
     useColorScheme() === 'dark' ? colors.dark.background : colors.light.background;
   const foregroundColor = useColorScheme() === 'dark' ? colors.dark.text : colors.light.text;
@@ -57,6 +58,7 @@ export default function InstructionsScreen() {
       setTimeout(() => {
         setIsAuthenticated(false);
         setUsername(null);
+        setIsAdmin(false);
         setIsLoggingOut(false);
       }, 100);
     } catch (error) {
@@ -72,9 +74,10 @@ export default function InstructionsScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: backgroundColor }}>
         <AuthScreen
-          onAuthSuccess={(username) => {
+          onAuthSuccess={(username, isAdmin) => {
             setIsAuthenticated(true);
             setUsername(username);
+            setIsAdmin(isAdmin);
             setShowAuthScreen(false);
           }}
         />

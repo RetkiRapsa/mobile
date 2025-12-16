@@ -65,6 +65,7 @@ export default function CreateNewLocationUpdate({
     setIsAuthenticated,
     username,
     setUsername,
+    setIsAdmin,
   } = useAppContext();
   const theme = useMemo(() => getTheme(), []);
 
@@ -349,9 +350,10 @@ export default function CreateNewLocationUpdate({
       >
         <View style={{ flex: 1 }}>
           <AuthScreen
-            onAuthSuccess={(username) => {
+            onAuthSuccess={(username, isAdmin) => {
               setIsAuthenticated(true);
               setUsername(username);
+              setIsAdmin(isAdmin);
               setShowAuthModal(false);
               // Only retry save if user previously attempted to save
               if (saveAttempted) {

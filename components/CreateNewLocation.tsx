@@ -66,6 +66,7 @@ export default function CreateNewLocationScreen() {
     setIsAuthenticated,
     username,
     setUsername,
+    setIsAdmin,
   } = useAppContext();
 
   const [form, setForm] = useState({
@@ -238,9 +239,10 @@ export default function CreateNewLocationScreen() {
       >
         <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
           <AuthScreen
-            onAuthSuccess={(username) => {
+            onAuthSuccess={(username, isAdmin) => {
               setIsAuthenticated(true);
               setUsername(username);
+              setIsAdmin(isAdmin);
               setShowAuthModal(false);
               // Only retry save if user previously attempted to save
               if (saveAttempted) {

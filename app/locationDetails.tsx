@@ -48,6 +48,7 @@ export default function LocationDetailsScreen() {
     setVisibleLocations,
     visibleLocations,
     username,
+    isAdmin,
     setReturnToMapCenter,
     setHasInitiallyCenteredMap,
   } = useAppContext();
@@ -60,8 +61,8 @@ export default function LocationDetailsScreen() {
 
   const handleDeleteUpdate = useCallback(
     async (updateId: string, updateUsername: string) => {
-      // Check if user owns this update
-      if (!username || username !== updateUsername) {
+      // Check if user owns this update or is an admin
+      if (!username || (username !== updateUsername && !isAdmin)) {
         Alert.alert(t('error'), t('cannotDeleteOthersUpdates'));
         return;
       }
@@ -96,13 +97,13 @@ export default function LocationDetailsScreen() {
         { cancelable: true }
       );
     },
-    [username, location, t]
+    [username, isAdmin, location, t]
   );
 
   const handleEditUpdate = useCallback(
     (update: LocationUpdate) => {
-      // Check if user owns this update
-      if (!username || username !== update.username) {
+      // Check if user owns this update or is an admin
+      if (!username || (username !== update.username && !isAdmin)) {
         Alert.alert(t('error'), t('cannotEditOthersUpdates'));
         return;
       }
@@ -111,7 +112,7 @@ export default function LocationDetailsScreen() {
       setEditingUpdate(update);
       setAddLocationUpdate(true);
     },
-    [username, t]
+    [username, isAdmin, t]
   );
 
   const handleEditLocation = useCallback(() => {
@@ -398,7 +399,7 @@ export default function LocationDetailsScreen() {
                         {locationUpdate.created}
                       </Text>
                     </View>
-                    {username && username === locationUpdate.username && (
+                    {username && (username === locationUpdate.username || isAdmin) && (
                       <View style={styles.actionButtons}>
                         <TouchableOpacity
                           onPress={() => handleEditUpdate(locationUpdate)}

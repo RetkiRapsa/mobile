@@ -13,6 +13,7 @@ import Location from '@/types/Location';
 import {
   isAuthenticated as checkAuthentication,
   clearToken,
+  getStoredIsAdmin,
   getStoredUsername,
 } from '@/utils/auth';
 import { setAuthFailureCallback } from '@/utils/client';
@@ -57,6 +58,8 @@ type AuthContextType = {
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
   username: string | null;
   setUsername: React.Dispatch<React.SetStateAction<string | null>>;
+  isAdmin: boolean;
+  setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 type MapStateType = {
@@ -92,6 +95,7 @@ function AppProvider({ children }: { children: React.ReactNode }) {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [hasInitiallyCenteredMap, setHasInitiallyCenteredMap] = useState<boolean>(false);
   const [returnToMapCenter, setReturnToMapCenter] = useState<{
@@ -112,6 +116,7 @@ function AppProvider({ children }: { children: React.ReactNode }) {
       console.log('[Auth] Auth failure detected from API - clearing auth state');
       setIsAuthenticated(false);
       setUsername(null);
+      setIsAdmin(false);
     };
 
     setAuthFailureCallback(handleAuthFailure);
@@ -129,16 +134,20 @@ function AppProvider({ children }: { children: React.ReactNode }) {
 
         if (authenticated) {
           const storedUsername = await getStoredUsername();
+          const storedIsAdmin = await getStoredIsAdmin();
 
           // Only consider authenticated if BOTH token AND username exist
           if (storedUsername) {
             console.log('[Auth] User authenticated with username:', storedUsername);
+            console.log('[Auth] User is admin:', storedIsAdmin);
             setIsAuthenticated(true);
             setUsername(storedUsername);
+            setIsAdmin(storedIsAdmin);
           } else {
             console.log('[Auth] Token exists but no username - clearing authentication');
             setIsAuthenticated(false);
             setUsername(null);
+            setIsAdmin(false);
             // Clear the orphaned token
             await clearToken();
           }
@@ -146,11 +155,13 @@ function AppProvider({ children }: { children: React.ReactNode }) {
           console.log('[Auth] No valid token found');
           setIsAuthenticated(false);
           setUsername(null);
+          setIsAdmin(false);
         }
       } catch (error) {
         console.error('[Auth] Failed to check authentication:', error);
         setIsAuthenticated(false);
         setUsername(null);
+        setIsAdmin(false);
       } finally {
         setIsCheckingAuth(false);
       }
@@ -199,6 +210,8 @@ function AppProvider({ children }: { children: React.ReactNode }) {
         setIsAuthenticated,
         username,
         setUsername,
+        isAdmin,
+        setIsAdmin,
         hasInitiallyCenteredMap,
         setHasInitiallyCenteredMap,
         returnToMapCenter,

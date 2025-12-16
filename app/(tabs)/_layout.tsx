@@ -44,8 +44,14 @@ export default function TabLayout() {
   // All hooks are called unconditionally at the top
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
-  const { hasReadSplashInfo, isAuthenticated, username, setIsAuthenticated, setUsername } =
-    useAppContext();
+  const {
+    hasReadSplashInfo,
+    isAuthenticated,
+    username,
+    setIsAuthenticated,
+    setUsername,
+    setIsAdmin,
+  } = useAppContext();
   const headerShown = useClientOnlyValue(false, true);
   const isLoggedIn = isAuthenticated && username;
   const router = useRouter();
@@ -133,9 +139,10 @@ export default function TabLayout() {
       >
         <View style={{ flex: 1, backgroundColor: backgroundColor }}>
           <AuthScreen
-            onAuthSuccess={(username) => {
+            onAuthSuccess={(username, isAdmin) => {
               setIsAuthenticated(true);
               setUsername(username);
+              setIsAdmin(isAdmin);
               setShowLoginModal(false);
               // Navigate back to map view after successful login
               router.push('/');

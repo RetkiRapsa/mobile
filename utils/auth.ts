@@ -15,6 +15,7 @@ const protocol = isLocalDevelopment ? 'http' : 'https';
 const API_BASE_URL = `${protocol}://${API_DOMAIN}`; // Base URL for user auth endpoints
 const TOKEN_KEY = 'retkirapsa_jwt_token'; // JWT token for authentication
 const USERNAME_KEY = 'retkirapsa_username';
+const IS_ADMIN_KEY = 'retkirapsa_is_admin';
 const REQUEST_TIMEOUT = 15000; // 15 seconds
 
 // Log the auth API configuration on startup
@@ -79,7 +80,8 @@ export async function clearToken(): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     await SecureStore.deleteItemAsync(USERNAME_KEY);
-    devLog('Token and username cleared from storage');
+    await SecureStore.deleteItemAsync(IS_ADMIN_KEY);
+    devLog('Token, username, and admin status cleared from storage');
   } catch (error) {
     logError('Failed to clear token:', error);
   }
@@ -107,10 +109,12 @@ export async function registerUser(username: string, password: string): Promise<
     }
 
     const token = response.data.token;
+    const isAdmin = response.data.admin || false;
 
     await SecureStore.setItemAsync(TOKEN_KEY, token);
     await SecureStore.setItemAsync(USERNAME_KEY, username);
-    devLog('User registered, token stored');
+    await SecureStore.setItemAsync(IS_ADMIN_KEY, isAdmin.toString());
+    devLog('User registered, token and admin status stored');
     // Verify token was stored
     const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
     devLog(
@@ -167,10 +171,12 @@ export async function loginUser(username: string, password: string): Promise<str
     }
 
     const token = response.data.token;
+    const isAdmin = response.data.admin || false;
 
     await SecureStore.setItemAsync(TOKEN_KEY, token);
     await SecureStore.setItemAsync(USERNAME_KEY, username);
-    devLog('User logged in, token stored');
+    await SecureStore.setItemAsync(IS_ADMIN_KEY, isAdmin.toString());
+    devLog('User logged in, token and admin status stored');
     // Verify token was stored
     const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
     devLog('Token verification after login:', storedToken ? 'Token present' : 'Token missing');
@@ -208,6 +214,7 @@ export async function logoutUser(): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     await SecureStore.deleteItemAsync(USERNAME_KEY);
+    await SecureStore.deleteItemAsync(IS_ADMIN_KEY);
     devLog('User logged out');
   } catch (error) {
     logError('Failed to logout user:', error);
@@ -237,5 +244,18 @@ export async function getStoredUsername(): Promise<string | null> {
   } catch (error) {
     logError('Failed to get stored username:', error);
     return null;
+  }
+}
+
+/**
+ * Get stored admin status
+ */
+export async function getStoredIsAdmin(): Promise<boolean> {
+  try {
+    const isAdminStr = await SecureStore.getItemAsync(IS_ADMIN_KEY);
+    return isAdminStr === 'true';
+  } catch (error) {
+    logError('Failed to get stored admin status:', error);
+    return false;
   }
 }

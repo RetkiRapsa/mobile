@@ -183,7 +183,7 @@ api.interceptors.response.use(
       });
     }
 
-    // If we get 403, authentication failed - user needs to login
+    // If we get 403, it could be authentication failure OR permission denied
     if (error.response?.status === 403) {
       devLog('=== GOT 403 FORBIDDEN ===');
       devLog('Request that failed:');
@@ -202,17 +202,25 @@ api.interceptors.response.use(
       devLog('  Payload:', originalRequest?.data);
       devLog('  Response data:', error.response.data);
 
-      devLog('Clearing token from storage due to 403...');
-      await clearToken();
+      // Only clear token and logout if no auth header was sent (authentication required)
+      // If auth header was sent, this is a permission issue, not an authentication issue
+      if (!hadAuthHeader) {
+        devLog('No auth header present - this is an authentication failure');
+        devLog('Clearing token from storage due to 403...');
+        await clearToken();
 
-      // Call the auth failure callback to update app context
-      if (onAuthFailureCallback) {
-        devLog('Calling auth failure callback to update app state...');
-        onAuthFailureCallback();
+        // Call the auth failure callback to update app context
+        if (onAuthFailureCallback) {
+          devLog('Calling auth failure callback to update app state...');
+          onAuthFailureCallback();
+        }
+      } else {
+        devLog('Auth header was present - this is a permission issue, not authentication failure');
+        devLog('User remains logged in');
       }
 
       devLog('=== END 403 HANDLING ===');
-      // Let the error propagate so the app can show login screen
+      // Let the error propagate so the app can show appropriate error message
     }
 
     // Retry logic for retryable errors
