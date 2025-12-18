@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { useAppContext } from '@/app/_layout';
 import CreateNewLocationUpdate from '@/components/CreateNewLocationUpdate';
 import EditLocation from '@/components/EditLocation';
+import FavoriteButton from '@/components/FavoriteButton';
 import colors from '@/constants/Colors';
 import LocationUpdate from '@/types/LocationUpdate';
 import { apiDeleteLocation, apiDeleteLocationUpdate } from '@/utils/client';
@@ -331,15 +332,18 @@ export default function LocationDetailsScreen() {
               size={52}
               color={foregroundColor}
             />
-            <Text
-              style={[styles.title, { color: foregroundColor }]}
-              onPress={() => {
-                Alert.alert(t('coordinatesCopied'));
-                copyToClipboard(selectedLocation.latitude + ', ' + selectedLocation.longitude);
-              }}
-            >
-              {selectedLocation.name}
-            </Text>
+            <View style={styles.titleContainer}>
+              <Text
+                style={[styles.title, { color: foregroundColor, flex: 1 }]}
+                onPress={() => {
+                  Alert.alert(t('coordinatesCopied'));
+                  copyToClipboard(selectedLocation.latitude + ', ' + selectedLocation.longitude);
+                }}
+              >
+                {selectedLocation.name}
+              </Text>
+              <FavoriteButton locationId={selectedLocation.id} size={32} />
+            </View>
             <Text style={[styles.statusText, { color: foregroundColor }]}>
               {t('inUse')}: {updatedAvailable ? t('yes') : t('no')}
             </Text>
@@ -469,10 +473,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    marginBottom: 25,
+    paddingHorizontal: 16,
+  },
   title: {
     fontSize: 25,
     fontWeight: 'bold',
-    marginBottom: 25,
   },
   coords: {
     fontSize: 15,

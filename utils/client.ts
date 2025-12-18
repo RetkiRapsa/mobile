@@ -84,22 +84,20 @@ function getUserFriendlyError(error: AxiosError): string {
   return 'Tapahtui virhe. Yritä uudelleen.';
 }
 
-// Request interceptor - add auth token for write operations
+// Request interceptor - add auth token to all requests
 api.interceptors.request.use(async (config) => {
-  const isWrite =
-    config.method === 'post' ||
-    config.method === 'put' ||
-    config.method === 'delete' ||
-    config.method === 'patch';
-
   devLog('=== REQUEST INTERCEPTOR ===');
   devLog('Method:', config.method?.toUpperCase());
   devLog('URL:', config.url);
   devLog('Base URL:', config.baseURL);
   devLog('Full URL:', `${config.baseURL}${config.url}`);
-  devLog('Is write operation:', isWrite);
 
-  if (isWrite) {
+  // Check if this is a public endpoint that doesn't need auth
+  const publicEndpoints = ['/locations/nearby', '/user/register', '/user/login', '/health'];
+  const isPublicEndpoint = publicEndpoints.some((endpoint) => config.url?.includes(endpoint));
+
+  if (!isPublicEndpoint) {
+    // All non-public endpoints need authentication
     try {
       const token = await getValidToken();
       devLog('Token retrieved:', token ? 'YES' : 'NO');
@@ -109,7 +107,7 @@ api.interceptors.request.use(async (config) => {
       }
 
       if (!token) {
-        logError('ERROR: No token available for write operation');
+        logError('ERROR: No token available for authenticated endpoint');
 
         // Call auth failure callback to update app state
         if (onAuthFailureCallback) {
@@ -150,6 +148,8 @@ api.interceptors.request.use(async (config) => {
       logError('Failed to get auth token:', error);
       return Promise.reject(new Error('Autentikointi epäonnistui'));
     }
+  } else {
+    devLog('Public endpoint - no authentication needed');
   }
 
   devLog('=== END REQUEST INTERCEPTOR ===');
@@ -181,6 +181,24 @@ api.interceptors.response.use(
         method: originalRequest?.method,
         data: error.response.data,
       });
+    }
+
+    // If we get 401, authentication has failed - user doesn't exist or token is invalid
+    if (error.response?.status === 401) {
+      devLog('=== GOT 401 UNAUTHORIZED ===');
+      devLog('Authentication failed - clearing token and logging out...');
+      devLog('Response data:', error.response.data);
+
+      await clearToken();
+
+      // Call the auth failure callback to update app context
+      if (onAuthFailureCallback) {
+        devLog('Calling auth failure callback to update app state...');
+        onAuthFailureCallback();
+      }
+
+      devLog('=== END 401 HANDLING ===');
+      // Let the error propagate so the app can show appropriate error message
     }
 
     // If we get 403, it could be authentication failure OR permission denied
@@ -244,6 +262,9 @@ api.interceptors.response.use(
     return Promise.reject(enhancedError);
   }
 );
+
+// Export the configured API client for use in other utilities
+export { api };
 
 export const apiGetLocationUpdates = async (id: string, limit = 20) =>
   api.get(`/locations/${id}/updates`, { params: { limit } });

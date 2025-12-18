@@ -88,12 +88,6 @@ export default function MenuScreen({
           color={colors.tint}
           style={styles.headerIcon}
         />
-        <Text style={styles.headerTitle}>{t('menu')}</Text>
-        {isAuthenticated && username && (
-          <Text style={styles.usernameText}>
-            {t('loggedInAs')}: {username}
-          </Text>
-        )}
       </View>
 
       <View style={styles.menuSection}>

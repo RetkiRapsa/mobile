@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -9,12 +9,15 @@ import {
   View,
 } from 'react-native';
 
+import { useFocusEffect } from 'expo-router';
+
 import { Text } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import Location from '@/types/Location';
 import { getFavoriteLocations, removeFavoriteLocation } from '@/utils/favorites';
 import { useTranslation } from '@/utils/i18n';
+import { getIconName } from '@/utils/map';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface FavoriteLocationsScreenProps {
@@ -30,6 +33,30 @@ export default function FavoriteLocationsScreen({ onLocationPress }: FavoriteLoc
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Helper function to get localized location type name
+  const getLocalizedType = (type: string): string => {
+    switch (type) {
+      case 'CAMPING_AREA':
+        return t('typeCamping');
+      case 'FIREPLACE':
+        return t('typeFireplace');
+      case 'LAAVU':
+        return t('typeLaavu');
+      case 'TOILET':
+        return t('typeToilet');
+      case 'BEACH':
+        return t('typeBeach');
+      case 'BRIDGE':
+        return t('typeBridge');
+      case 'PARKING':
+        return t('typeParking');
+      case 'OTHER':
+        return t('typeOther');
+      default:
+        return type;
+    }
+  };
+
   const loadFavorites = async () => {
     try {
       const data = await getFavoriteLocations();
@@ -43,9 +70,13 @@ export default function FavoriteLocationsScreen({ onLocationPress }: FavoriteLoc
     }
   };
 
-  useEffect(() => {
-    loadFavorites();
-  }, []);
+  // Reload favorites whenever the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      setLoading(true);
+      loadFavorites();
+    }, [])
+  );
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -101,9 +132,7 @@ export default function FavoriteLocationsScreen({ onLocationPress }: FavoriteLoc
           style={styles.emptyIcon}
         />
         <Text style={styles.emptyText}>{t('noFavorites')}</Text>
-        <Text style={[styles.emptySubtext, { color: colors.tabIconDefault }]}>
-          {t('noFavoritesDescription')}
-        </Text>
+        <Text style={[styles.emptySubtext]}>{t('noFavoritesDescription')}</Text>
       </ScrollView>
     );
   }
@@ -131,7 +160,7 @@ export default function FavoriteLocationsScreen({ onLocationPress }: FavoriteLoc
             >
               <View style={styles.locationHeader}>
                 <MaterialCommunityIcons
-                  name="map-marker"
+                  name={location.type ? getIconName(location.type) : 'map-marker'}
                   size={24}
                   color={colors.tint}
                   style={styles.locationIcon}
@@ -139,9 +168,7 @@ export default function FavoriteLocationsScreen({ onLocationPress }: FavoriteLoc
                 <View style={styles.locationInfo}>
                   <Text style={styles.locationName}>{location.name || t('unnamedLocation')}</Text>
                   {location.type && (
-                    <Text style={[styles.locationType, { color: colors.tabIconDefault }]}>
-                      {location.type}
-                    </Text>
+                    <Text style={[styles.locationType]}>{getLocalizedType(location.type)}</Text>
                   )}
                 </View>
               </View>

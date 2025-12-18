@@ -15,6 +15,7 @@ import {
   clearToken,
   getStoredIsAdmin,
   getStoredUsername,
+  getValidToken,
 } from '@/utils/auth';
 import { setAuthFailureCallback } from '@/utils/client';
 import { loadSavedLocale, useTranslation } from '@/utils/i18n';
@@ -140,9 +141,50 @@ function AppProvider({ children }: { children: React.ReactNode }) {
           if (storedUsername) {
             console.log('[Auth] User authenticated with username:', storedUsername);
             console.log('[Auth] User is admin:', storedIsAdmin);
-            setIsAuthenticated(true);
-            setUsername(storedUsername);
-            setIsAdmin(storedIsAdmin);
+
+            // Validate token with backend using the dedicated /validate endpoint
+            try {
+              console.log('[Auth] Validating token with backend...');
+              const axios = require('axios');
+              const token = await getValidToken();
+              const API_DOMAIN = process.env.EXPO_PUBLIC_RETKIRAPSA_API_DOMAIN || 'localhost';
+              const isLocal =
+                API_DOMAIN.includes('localhost') || API_DOMAIN.match(/^\d+\.\d+\.\d+\.\d+/);
+              const protocol = isLocal ? 'http' : 'https';
+              const API_URL = `${protocol}://${API_DOMAIN}`;
+
+              // Call the /validate endpoint to check if user exists in backend
+              const response = await axios.get(`${API_URL}/validate`, {
+                headers: { Authorization: `Bearer ${token}` },
+                timeout: 5000,
+              });
+
+              console.log('[Auth] Token validation successful - user exists in backend');
+              console.log('[Auth] Validation response:', response.data);
+              setIsAuthenticated(true);
+              setUsername(storedUsername);
+              setIsAdmin(storedIsAdmin);
+            } catch (error: any) {
+              console.log(
+                '[Auth] Token validation failed:',
+                error.response?.status || error.message
+              );
+              if (error.response?.status === 401 || error.response?.status === 403) {
+                console.log('[Auth] User does not exist in backend - clearing authentication');
+                setIsAuthenticated(false);
+                setUsername(null);
+                setIsAdmin(false);
+                await clearToken();
+              } else {
+                // Network error or other issue - don't log out, just log the error
+                console.log(
+                  '[Auth] Could not validate token (network error) - assuming valid for now'
+                );
+                setIsAuthenticated(true);
+                setUsername(storedUsername);
+                setIsAdmin(storedIsAdmin);
+              }
+            }
           } else {
             console.log('[Auth] Token exists but no username - clearing authentication');
             setIsAuthenticated(false);
