@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Animated,
   Modal,
@@ -229,10 +230,17 @@ export default function CreateNewLocationScreen({ onClose }: CreateNewLocationSc
       {/* Action Buttons */}
       <TouchableOpacity
         disabled={loading}
-        style={[styles.saveButton, { opacity: loading ? 0.6 : 1 }]}
+        style={[styles.saveButton, loading && styles.saveButtonDisabled]}
         onPress={() => handleSave()}
       >
-        <Text style={styles.saveButtonText}>{loading ? t('loadingData') : t('save')}</Text>
+        {loading ? (
+          <View style={styles.buttonContent}>
+            <ActivityIndicator color="#FFFFFF" size="small" style={{ marginRight: 8 }} />
+            <Text style={styles.saveButtonText}>{t('saving')}</Text>
+          </View>
+        ) : (
+          <Text style={styles.saveButtonText}>{t('save')}</Text>
+        )}
       </TouchableOpacity>
 
       {/* Authentication Modal */}
@@ -396,6 +404,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   saveButtonText: {
     color: '#FFFFFF',

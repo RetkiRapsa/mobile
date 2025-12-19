@@ -33,6 +33,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
   const webViewRef = useRef<WebView | null>(null);
   const lastRefreshTimeRef = useRef<number>(0);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const initialLocationRef = useRef(location); // Capture initial location for map center
   const router = useRouter();
   const {
     visibleLocations,
@@ -450,16 +451,16 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
   // Generate HTML for WebView with Leaflet map
   const htmlContent = useMemo(() => {
     // If returnToMapCenter is set, use those coordinates for initial center
-    // Otherwise use current location or default Helsinki
+    // Otherwise use initial location (captured at component mount) or default Helsinki
     let initialLat = DEFAULT_LOCATION_LATITUDE;
     let initialLon = DEFAULT_LOCATION_LONGITUDE;
 
     if (returnToMapCenter) {
       initialLat = returnToMapCenter.latitude;
       initialLon = returnToMapCenter.longitude;
-    } else if (location) {
-      initialLat = location.latitude;
-      initialLon = location.longitude;
+    } else if (initialLocationRef.current) {
+      initialLat = initialLocationRef.current.latitude;
+      initialLon = initialLocationRef.current.longitude;
     }
 
     return `
@@ -647,7 +648,7 @@ export default function Map({ location, usingDefaultLocation = false }: MapProps
         </body>
       </html>
     `;
-  }, [returnToMapCenter, location]); // Regenerate when returnToMapCenter or location changes
+  }, [returnToMapCenter]); // Only regenerate when returnToMapCenter changes (not on every location update)
 
   // Render
   if (!location || !locationFound) {
