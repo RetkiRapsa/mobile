@@ -26,7 +26,7 @@ export default function MenuTab() {
     <View style={{ flex: 1 }}>
       <MenuScreen
         isAuthenticated={isAuthenticated}
-        username={username}
+        displayName={username}
         onLoginPress={() => setShowLoginModal(true)}
         onRegisterPress={() => setShowRegisterModal(true)}
         onNewLocationPress={() => router.push('/(tabs)/createNewLocation')}
@@ -81,6 +81,7 @@ export default function MenuTab() {
       >
         <View style={{ flex: 1, backgroundColor: colors.background }}>
           <AuthScreen
+            initialMode="register"
             onAuthSuccess={(username, isAdmin) => {
               setIsAuthenticated(true);
               setUsername(username);

@@ -12,40 +12,36 @@ import {
   View,
 } from 'react-native';
 
-import { getStoredIsAdmin, loginUser, registerUser } from '@/utils/auth';
+import { getStoredDisplayName, getStoredIsAdmin, loginUser, registerUser } from '@/utils/auth';
 import { useTranslation } from '@/utils/i18n';
 import { devLog } from '@/utils/logger';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface AuthScreenProps {
-  onAuthSuccess: (username: string, isAdmin: boolean) => void;
+  onAuthSuccess: (displayName: string, isAdmin: boolean) => void;
+  initialMode?: 'login' | 'register';
 }
 
-export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
+export default function AuthScreen({ onAuthSuccess, initialMode = 'login' }: AuthScreenProps) {
   const { t } = useTranslation();
-  const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState('');
+  const [isLogin, setIsLogin] = useState(initialMode === 'login');
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const validateForm = (): string | null => {
-    if (!username.trim()) {
-      return t('usernameRequired');
+    if (!email.trim()) {
+      return t('emailRequired');
     }
-
-    // Only validate username format when registering
-    if (!isLogin) {
-      const usernameRegex = /^[a-zA-ZöäåÖÄÅ0-9\-+]+$/;
-      if (!usernameRegex.test(username.trim())) {
-        return t('usernameInvalidCharacters');
-      }
-    }
-
     if (!password) {
       return t('passwordRequired');
     }
     if (password.length < 6) {
       return t('passwordTooShort');
+    }
+    if (!isLogin && !displayName.trim()) {
+      return t('displayNameRequired');
     }
     return null;
   };
@@ -59,16 +55,21 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
     setLoading(true);
     try {
+      let returnedDisplayName: string;
+
       if (isLogin) {
-        await loginUser(username.trim(), password);
+        await loginUser(email.trim(), password);
+        // Get display name from storage after login
+        const storedDisplayName = await getStoredDisplayName();
+        returnedDisplayName = storedDisplayName || email.trim();
       } else {
-        await registerUser(username.trim(), password);
+        await registerUser(displayName.trim(), email.trim(), password);
+        returnedDisplayName = displayName.trim();
       }
-      // Retrieve admin status after successful authentication
+
       const isAdmin = await getStoredIsAdmin();
-      onAuthSuccess(username.trim(), isAdmin);
+      onAuthSuccess(returnedDisplayName, isAdmin);
     } catch (error: any) {
-      // Use devLog instead of logError since these are expected user errors (wrong password, etc.)
       devLog('Auth error:', error.message || error);
       Alert.alert(
         isLogin ? t('loginError') : t('registerError'),
@@ -103,17 +104,31 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
           </View>
 
           <View style={styles.formContainer}>
+            {!isLogin && (
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>{t('displayName')}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t('displayNamePlaceholder')}
+                  value={displayName}
+                  onChangeText={setDisplayName}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  editable={!loading}
+                />
+              </View>
+            )}
+
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>
-                {isLogin ? t('usernameLogin') : t('usernameRegister')}
-              </Text>
+              <Text style={styles.label}>{t('email')}</Text>
               <TextInput
                 style={styles.input}
-                placeholder={t('usernamePlaceholder')}
-                value={username}
-                onChangeText={setUsername}
+                placeholder={t('emailPlaceholder')}
+                value={email}
+                onChangeText={setEmail}
                 autoCapitalize="none"
                 autoCorrect={false}
+                keyboardType="email-address"
                 editable={!loading}
               />
             </View>
@@ -150,7 +165,8 @@ export default function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
               style={styles.switchButton}
               onPress={() => {
                 setIsLogin(!isLogin);
-                setUsername('');
+                setDisplayName('');
+                setEmail('');
                 setPassword('');
               }}
               disabled={loading}

@@ -10,7 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface MenuScreenProps {
   isAuthenticated: boolean;
-  username: string | null;
+  displayName: string | null; // Updated from username to displayName
   onLoginPress: () => void;
   onRegisterPress: () => void;
   onNewLocationPress: () => void;
@@ -20,7 +20,7 @@ interface MenuScreenProps {
 
 export default function MenuScreen({
   isAuthenticated,
-  username,
+  displayName, // Updated from username to displayName
   onLoginPress,
   onRegisterPress,
   onNewLocationPress,
@@ -88,6 +88,11 @@ export default function MenuScreen({
           color={colors.tint}
           style={styles.headerIcon}
         />
+        {isAuthenticated && displayName && (
+          <Text style={styles.usernameText}>
+            {t('welcome')}, {displayName}
+          </Text>
+        )}
       </View>
 
       <View style={styles.menuSection}>
@@ -134,8 +139,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   usernameText: {
-    fontSize: 14,
-    opacity: 0.7,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 8,
   },
   menuSection: {
     paddingHorizontal: 0,

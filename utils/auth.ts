@@ -90,14 +90,18 @@ export async function clearToken(): Promise<void> {
 /**
  * Register a new user
  */
-export async function registerUser(username: string, password: string): Promise<string> {
+export async function registerUser(
+  displayName: string,
+  email: string,
+  password: string
+): Promise<string> {
   try {
-    devLog('Registering user:', username);
+    devLog('Registering user:', email);
 
     // Use direct axios call without interceptors to avoid sending device token
     const response = await axios.post(
       `${API_BASE_URL}/user/register`,
-      { username, password },
+      { displayName, email, password },
       {
         timeout: REQUEST_TIMEOUT,
         headers: { 'Content-Type': 'application/json' },
@@ -110,9 +114,10 @@ export async function registerUser(username: string, password: string): Promise<
 
     const token = response.data.token;
     const isAdmin = response.data.admin || false;
+    const returnedDisplayName = response.data.displayName || displayName;
 
     await SecureStore.setItemAsync(TOKEN_KEY, token);
-    await SecureStore.setItemAsync(USERNAME_KEY, username);
+    await SecureStore.setItemAsync(USERNAME_KEY, returnedDisplayName);
     await SecureStore.setItemAsync(IS_ADMIN_KEY, isAdmin.toString());
     devLog('User registered, token and admin status stored');
     // Verify token was stored
@@ -131,7 +136,7 @@ export async function registerUser(username: string, password: string): Promise<
       } else if (!error.response) {
         throw new Error(t('errorNoConnection'));
       } else if (error.response.status === 409) {
-        throw new Error(t('errorUsernameExists'));
+        throw new Error(t('errorEmailExists'));
       } else if (error.response.status >= 500) {
         throw new Error(t('errorServerError'));
       } else if (error.response.status === 400) {
@@ -152,14 +157,14 @@ export async function registerUser(username: string, password: string): Promise<
 /**
  * Login user
  */
-export async function loginUser(username: string, password: string): Promise<string> {
+export async function loginUser(email: string, password: string): Promise<string> {
   try {
-    devLog('Logging in user:', username);
+    devLog('Logging in user:', email);
 
     // Use direct axios call without interceptors to avoid sending device token
     const response = await axios.post(
       `${API_BASE_URL}/user/login`,
-      { username, password },
+      { email, password },
       {
         timeout: REQUEST_TIMEOUT,
         headers: { 'Content-Type': 'application/json' },
@@ -172,9 +177,10 @@ export async function loginUser(username: string, password: string): Promise<str
 
     const token = response.data.token;
     const isAdmin = response.data.admin || false;
+    const displayName = response.data.displayName || email;
 
     await SecureStore.setItemAsync(TOKEN_KEY, token);
-    await SecureStore.setItemAsync(USERNAME_KEY, username);
+    await SecureStore.setItemAsync(USERNAME_KEY, displayName);
     await SecureStore.setItemAsync(IS_ADMIN_KEY, isAdmin.toString());
     devLog('User logged in, token and admin status stored');
     // Verify token was stored
@@ -236,13 +242,13 @@ export async function isAuthenticated(): Promise<boolean> {
 }
 
 /**
- * Get stored username
+ * Get stored display name
  */
-export async function getStoredUsername(): Promise<string | null> {
+export async function getStoredDisplayName(): Promise<string | null> {
   try {
     return await SecureStore.getItemAsync(USERNAME_KEY);
   } catch (error) {
-    logError('Failed to get stored username:', error);
+    logError('Failed to get stored display name:', error);
     return null;
   }
 }
@@ -259,3 +265,161 @@ export async function getStoredIsAdmin(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Request password reset
+ */
+export async function requestPasswordReset(email: string): Promise<void> {
+  try {
+    devLog('Requesting password reset for:', email);
+
+    await axios.post(
+      `${API_BASE_URL}/user/forgot-password`,
+      { email },
+      {
+        timeout: REQUEST_TIMEOUT,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    devLog('Password reset email sent');
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error(t('errorTimeout'));
+      } else if (!error.response) {
+        throw new Error(t('errorNoConnection'));
+      } else if (error.response.status >= 500) {
+        throw new Error(t('errorServerError'));
+      }
+    }
+    throw new Error(t('errorGeneric'));
+  }
+}
+
+/**
+ * Change password (requires authentication)
+ */
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  try {
+    const token = await getValidToken();
+    if (!token) {
+      throw new Error(t('errorNotAuthenticated'));
+    }
+
+    devLog('Changing password');
+
+    await axios.post(
+      `${API_BASE_URL}/user/change-password`,
+      { currentPassword, newPassword },
+      {
+        timeout: REQUEST_TIMEOUT,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    devLog('Password changed successfully');
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error(t('errorTimeout'));
+      } else if (!error.response) {
+        throw new Error(t('errorNoConnection'));
+      } else if (error.response.status === 400) {
+        throw new Error(t('errorCurrentPasswordIncorrect'));
+      } else if (error.response.status === 401) {
+        throw new Error(t('errorNotAuthenticated'));
+      } else if (error.response.status >= 500) {
+        throw new Error(t('errorServerError'));
+      }
+    }
+    throw new Error(t('errorGeneric'));
+  }
+}
+
+/**
+ * Change email (requires authentication and verification)
+ */
+export async function changeEmail(newEmail: string): Promise<void> {
+  try {
+    const token = await getValidToken();
+    if (!token) {
+      throw new Error(t('errorNotAuthenticated'));
+    }
+
+    devLog('Changing email to:', newEmail);
+
+    await axios.post(
+      `${API_BASE_URL}/user/change-email`,
+      { newEmail },
+      {
+        timeout: REQUEST_TIMEOUT,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    devLog('Email change requested, verification email sent');
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error(t('errorTimeout'));
+      } else if (!error.response) {
+        throw new Error(t('errorNoConnection'));
+      } else if (error.response.status === 409) {
+        throw new Error(t('errorEmailExists'));
+      } else if (error.response.status === 401) {
+        throw new Error(t('errorNotAuthenticated'));
+      } else if (error.response.status >= 500) {
+        throw new Error(t('errorServerError'));
+      }
+    }
+    throw new Error(t('errorGeneric'));
+  }
+}
+
+/**
+ * Get user profile
+ */
+export async function getUserProfile(): Promise<{
+  displayName: string;
+  email: string;
+  emailVerified: boolean;
+  isAdmin: boolean;
+}> {
+  try {
+    const token = await getValidToken();
+    if (!token) {
+      throw new Error(t('errorNotAuthenticated'));
+    }
+
+    const response = await axios.get(`${API_BASE_URL}/user/profile`, {
+      timeout: REQUEST_TIMEOUT,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error(t('errorTimeout'));
+      } else if (!error.response) {
+        throw new Error(t('errorNoConnection'));
+      } else if (error.response.status === 401) {
+        throw new Error(t('errorNotAuthenticated'));
+      } else if (error.response.status >= 500) {
+        throw new Error(t('errorServerError'));
+      }
+    }
+    throw new Error(t('errorGeneric'));
+  }
+}
+
+export { logoutUser as logout };

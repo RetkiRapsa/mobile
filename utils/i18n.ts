@@ -204,7 +204,32 @@ type TranslationKey =
   | 'thisLocation'
   | 'authenticationRequired'
   | 'pleaseLoginToUseFavorites'
-  | 'ok';
+  | 'ok'
+  | 'welcome'
+  | 'displayName'
+  | 'displayNamePlaceholder'
+  | 'displayNameRequired'
+  | 'email'
+  | 'emailPlaceholder'
+  | 'emailRequired'
+  | 'errorEmailExists'
+  | 'errorNotAuthenticated'
+  | 'errorCurrentPasswordIncorrect'
+  | 'errorGeneric'
+  | 'profile'
+  | 'changePassword'
+  | 'changeEmail'
+  | 'forgotPassword'
+  | 'currentPassword'
+  | 'newPassword'
+  | 'confirmPassword'
+  | 'passwordChangedSuccessfully'
+  | 'emailChangedSuccessfully'
+  | 'passwordResetEmailSent'
+  | 'enterCurrentPassword'
+  | 'enterNewPassword'
+  | 'enterNewEmail'
+  | 'passwordsDoNotMatch';
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -440,6 +465,32 @@ const translations: { [locale: string]: Translations } = {
     authenticationRequired: 'Kirjautuminen vaaditaan',
     pleaseLoginToUseFavorites: 'Kirjaudu sisään käyttääksesi suosikkeja.',
     ok: 'OK',
+    welcome: 'Tervetuloa',
+    displayName: 'Näyttönimi',
+    displayNamePlaceholder: 'Muille näkyvä nimi',
+    displayNameRequired: 'Näyttönimi on pakollinen',
+    email: 'Sähköposti',
+    emailPlaceholder: 'esimerkki@email.com',
+    emailRequired: 'Sähköpostiosoite on pakollinen',
+    errorEmailExists: 'Sähköpostiosoite on jo käytössä.',
+    errorNotAuthenticated: 'Kirjautuminen vaaditaan.',
+    errorCurrentPasswordIncorrect: 'Nykyinen salasana on väärin.',
+    errorGeneric: 'Jokin meni pieleen. Yritä uudelleen.',
+    profile: 'Profiili',
+    changePassword: 'Vaihda salasana',
+    changeEmail: 'Vaihda sähköposti',
+    forgotPassword: 'Unohditko salasanan?',
+    currentPassword: 'Nykyinen salasana',
+    newPassword: 'Uusi salasana',
+    confirmPassword: 'Vahvista salasana',
+    passwordChangedSuccessfully: 'Salasana vaihdettu onnistuneesti.',
+    emailChangedSuccessfully:
+      'Sähköposti vaihdettu. Tarkista uusi sähköpostisi vahvistusta varten.',
+    passwordResetEmailSent: 'Salasanan palautusohjeet on lähetetty sähköpostiisi.',
+    enterCurrentPassword: 'Syötä nykyinen salasanasi',
+    enterNewPassword: 'Syötä uusi salasana',
+    enterNewEmail: 'Syötä uusi sähköpostiosoite',
+    passwordsDoNotMatch: 'Salasanat eivät täsmää.',
   },
   en: {
     locationNotDetermined: 'Location could not be determined',
@@ -669,6 +720,31 @@ const translations: { [locale: string]: Translations } = {
     authenticationRequired: 'Authentication Required',
     pleaseLoginToUseFavorites: 'Please log in to use favorites.',
     ok: 'OK',
+    welcome: 'Welcome',
+    displayName: 'Display Name',
+    displayNamePlaceholder: 'Name visible to others',
+    displayNameRequired: 'Display name is required',
+    email: 'Email',
+    emailPlaceholder: 'example@email.com',
+    emailRequired: 'Email address is required',
+    errorEmailExists: 'Email address is already in use.',
+    errorNotAuthenticated: 'Authentication required.',
+    errorCurrentPasswordIncorrect: 'Current password is incorrect.',
+    errorGeneric: 'Something went wrong. Please try again.',
+    profile: 'Profile',
+    changePassword: 'Change Password',
+    changeEmail: 'Change Email',
+    forgotPassword: 'Forgot Password?',
+    currentPassword: 'Current Password',
+    newPassword: 'New Password',
+    confirmPassword: 'Confirm Password',
+    passwordChangedSuccessfully: 'Password changed successfully.',
+    emailChangedSuccessfully: 'Email changed. Check your new email for verification.',
+    passwordResetEmailSent: 'Password reset instructions have been sent to your email.',
+    enterCurrentPassword: 'Enter your current password',
+    enterNewPassword: 'Enter new password',
+    enterNewEmail: 'Enter new email address',
+    passwordsDoNotMatch: 'Passwords do not match.',
   },
 };
 

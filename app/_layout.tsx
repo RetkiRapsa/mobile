@@ -13,8 +13,8 @@ import Location from '@/types/Location';
 import {
   isAuthenticated as checkAuthentication,
   clearToken,
+  getStoredDisplayName,
   getStoredIsAdmin,
-  getStoredUsername,
   getValidToken,
 } from '@/utils/auth';
 import { setAuthFailureCallback } from '@/utils/client';
@@ -134,12 +134,12 @@ function AppProvider({ children }: { children: React.ReactNode }) {
         const authenticated = await checkAuthentication();
 
         if (authenticated) {
-          const storedUsername = await getStoredUsername();
+          const storedDisplayName = await getStoredDisplayName();
           const storedIsAdmin = await getStoredIsAdmin();
 
-          // Only consider authenticated if BOTH token AND username exist
-          if (storedUsername) {
-            console.log('[Auth] User authenticated with username:', storedUsername);
+          // Only consider authenticated if BOTH token AND display name exist
+          if (storedDisplayName) {
+            console.log('[Auth] User authenticated with display name:', storedDisplayName);
             console.log('[Auth] User is admin:', storedIsAdmin);
 
             // Validate token with backend using the dedicated /validate endpoint
@@ -162,7 +162,7 @@ function AppProvider({ children }: { children: React.ReactNode }) {
               console.log('[Auth] Token validation successful - user exists in backend');
               console.log('[Auth] Validation response:', response.data);
               setIsAuthenticated(true);
-              setUsername(storedUsername);
+              setUsername(storedDisplayName);
               setIsAdmin(storedIsAdmin);
             } catch (error: any) {
               console.log(
@@ -181,12 +181,12 @@ function AppProvider({ children }: { children: React.ReactNode }) {
                   '[Auth] Could not validate token (network error) - assuming valid for now'
                 );
                 setIsAuthenticated(true);
-                setUsername(storedUsername);
+                setUsername(storedDisplayName);
                 setIsAdmin(storedIsAdmin);
               }
             }
           } else {
-            console.log('[Auth] Token exists but no username - clearing authentication');
+            console.log('[Auth] Token exists but no display name - clearing authentication');
             setIsAuthenticated(false);
             setUsername(null);
             setIsAdmin(false);
