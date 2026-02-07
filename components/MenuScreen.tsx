@@ -15,6 +15,7 @@ interface MenuScreenProps {
   onRegisterPress: () => void;
   onNewLocationPress: () => void;
   onFavoriteLocationsPress: () => void;
+  onProfilePress: () => void;
   onLogoutPress: () => void;
 }
 
@@ -25,6 +26,7 @@ export default function MenuScreen({
   onRegisterPress,
   onNewLocationPress,
   onFavoriteLocationsPress,
+  onProfilePress,
   onLogoutPress,
 }: MenuScreenProps) {
   const { t } = useTranslation();
@@ -113,6 +115,7 @@ export default function MenuScreen({
               title={t('favoriteLocations')}
               onPress={onFavoriteLocationsPress}
             />
+            <MenuItem icon="account-cog" title={t('profile')} onPress={onProfilePress} />
             <MenuItem icon="logout" title={t('logout')} onPress={handleLogout} color="#ff3b30" />
           </>
         )}

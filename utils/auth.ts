@@ -422,4 +422,44 @@ export async function getUserProfile(): Promise<{
   }
 }
 
+/**
+ * Delete account (requires password confirmation)
+ */
+export async function deleteAccount(password: string): Promise<void> {
+  try {
+    const token = await getValidToken();
+    if (!token) {
+      throw new Error(t('errorNotAuthenticated'));
+    }
+
+    devLog('Deleting account');
+
+    await axios.delete(`${API_BASE_URL}/user/account`, {
+      data: { password },
+      timeout: REQUEST_TIMEOUT,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Clear all stored data after successful deletion
+    await clearToken();
+    devLog('Account deleted successfully');
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        throw new Error(t('errorTimeout'));
+      } else if (!error.response) {
+        throw new Error(t('errorNoConnection'));
+      } else if (error.response.status === 401) {
+        throw new Error(t('errorCurrentPasswordIncorrect'));
+      } else if (error.response.status >= 500) {
+        throw new Error(t('errorServerError'));
+      }
+    }
+    throw new Error(t('errorGeneric'));
+  }
+}
+
 export { logoutUser as logout };

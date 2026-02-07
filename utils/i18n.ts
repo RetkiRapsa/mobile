@@ -229,7 +229,13 @@ type TranslationKey =
   | 'enterCurrentPassword'
   | 'enterNewPassword'
   | 'enterNewEmail'
-  | 'passwordsDoNotMatch';
+  | 'passwordsDoNotMatch'
+  | 'deleteAccount'
+  | 'deleteAccountConfirm'
+  | 'deleteAccountWarning'
+  | 'enterPasswordToConfirm'
+  | 'accountDeleted'
+  | 'accountDeletionFailed';
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -491,6 +497,13 @@ const translations: { [locale: string]: Translations } = {
     enterNewPassword: 'Syötä uusi salasana',
     enterNewEmail: 'Syötä uusi sähköpostiosoite',
     passwordsDoNotMatch: 'Salasanat eivät täsmää.',
+    deleteAccount: 'Poista tili',
+    deleteAccountConfirm: 'Haluatko varmasti poistaa tilisi?',
+    deleteAccountWarning:
+      'Tämä toiminto poistaa tilisi pysyvästi ja kaikki siihen liittyvät tiedot. Tätä toimintoa ei voi peruuttaa.',
+    enterPasswordToConfirm: 'Syötä salasanasi vahvistaaksesi',
+    accountDeleted: 'Tili poistettu onnistuneesti.',
+    accountDeletionFailed: 'Tilin poistaminen epäonnistui.',
   },
   en: {
     locationNotDetermined: 'Location could not be determined',
@@ -745,6 +758,13 @@ const translations: { [locale: string]: Translations } = {
     enterNewPassword: 'Enter new password',
     enterNewEmail: 'Enter new email address',
     passwordsDoNotMatch: 'Passwords do not match.',
+    deleteAccount: 'Delete Account',
+    deleteAccountConfirm: 'Are you sure you want to delete your account?',
+    deleteAccountWarning:
+      'This action will permanently delete your account and all associated data. This cannot be undone.',
+    enterPasswordToConfirm: 'Enter your password to confirm',
+    accountDeleted: 'Account deleted successfully.',
+    accountDeletionFailed: 'Failed to delete account.',
   },
 };
 
